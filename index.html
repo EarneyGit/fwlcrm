@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en-IN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LeadPulse CRM — Real-time Meta Lead Ads management for Chennai performance agencies. Multi-tenant, WhatsApp-first, CAPI-enabled.">
+  <meta name="theme-color" content="#0D1425">
+  <title>LeadPulse CRM — Meta Lead Ads Management</title>
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2306B6D4'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>">
+
+  <!-- Design system -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Scripts loaded in dependency order -->
+  <!-- 2. Global APIs (Backend integrated) -->
+
+  <!-- 2. Components -->
+  <script src="components/toast.js"></script>
+  <script src="components/sidebar.js"></script>
+  <script src="components/lead-drawer.js"></script>
+
+  <!-- 3. Pages -->
+  <script src="pages/dashboard.js"></script>
+  <script src="pages/leads.js"></script>
+  <script src="pages/clients.js"></script>
+  <script src="pages/integrations.js"></script>
+  <script src="pages/settings.js"></script>
+  <script src="pages/reports.js"></script>
+  <script src="pages/calendar.js"></script>
+
+  <!-- 4. App router (last) -->
+  <script src="app.js"></script>
+</head>
+
+<body>
+  <!-- ─── APP SHELL ─────────────────────────────────────── -->
+  <div id="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside id="sidebar" role="navigation" aria-label="Main navigation">
+      <!-- Filled by sidebar.js -->
+    </aside>
+
+    <!-- MAIN AREA -->
+    <div id="main-content">
+
+      <!-- TOPBAR -->
+      <header id="topbar" role="banner">
+        <!-- Mobile menu -->
+        <button id="mobile-menu-btn" aria-label="Open menu"><svg viewBox="0 0 24 24"><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="18" y2="18"/></svg></button>
+
+        <!-- Page title -->
+        <div id="topbar-title">Dashboard</div>
+
+        <!-- Search -->
+        <div class="topbar-search" role="search">
+          <svg viewBox="0 0 24 24" class="topbar-search-icon"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" placeholder="Search leads, clients, campaigns..."
+            aria-label="Global search" id="global-search">
+        </div>
+
+        <!-- Live status -->
+        <div class="live-pill" title="Webhook active — ap-south-1 Mumbai">
+          <div class="live-dot"></div>
+          <span>LIVE</span>
+        </div>
+
+        <!-- Notifications -->
+        <button class="topbar-btn" id="notif-btn" title="Notifications" aria-label="Notifications">
+          <svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+          <span class="dot"></span>
+        </button>
+
+        <!-- Theme toggle -->
+        <button class="topbar-btn" id="theme-toggle-btn" title="Toggle theme" aria-label="Toggle dark/light mode">
+          <svg viewBox="0 0 24 24" id="theme-icon-svg"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        </button>
+
+        <!-- User avatar -->
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 8px;border-radius:8px;border:1px solid var(--border);transition:background 0.15s"
+          onmouseover="this.style.background='var(--surface-2)'"
+          onmouseout="this.style.background=''"
+          onclick="LP.router.navigate('settings')"
+          title="Agency Owner · Settings"
+        >
+          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1877F2,#6C47FF);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white">AR</div>
+          <span style="font-size:12px;font-weight:600;color:var(--text-1)">Agency</span>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT -->
+      <main id="page-content" role="main" aria-live="polite">
+        <!-- Rendered by page modules -->
+        <div style="display:flex;align-items:center;justify-content:center;min-height:60vh;flex-direction:column;gap:16px">
+          <div style="width:40px;height:40px;border:3px solid var(--meta);border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+          <p style="color:var(--text-3);font-size:13px">Connecting to Meta…</p>
+        </div>
+      </main>
+
+    </div><!-- /main-content -->
+  </div><!-- /app-shell -->
+
+  <!-- LEAD DRAWER -->
+  <div id="lead-drawer-overlay" role="dialog" aria-modal="true" aria-label="Lead detail"></div>
+  <aside id="lead-drawer" role="complementary" aria-label="Lead details panel">
+    <!-- Filled by lead-drawer.js -->
+  </aside>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" role="status" aria-live="polite" aria-atomic="false"></div>
+
+  <!-- Loading spinner keyframe -->
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+</body>
+</html>

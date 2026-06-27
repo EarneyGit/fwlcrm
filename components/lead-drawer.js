@@ -1,0 +1,324 @@
+// ============================================================
+// LeadPulse CRM — Lead Detail Drawer Component
+// ============================================================
+
+window.LP = window.LP || {};
+
+LP.drawer = (() => {
+  let currentLead = null;
+
+  const statusOptions = [
+    { key: 'new',       label: 'New' },
+    { key: 'contacted', label: 'Contacted' },
+    { key: 'qualified', label: 'Qualified' },
+    { key: 'won',       label: 'Won ✓' },
+    { key: 'lost',      label: 'Lost ✕' },
+    { key: 'nurture',   label: 'Nurture' },
+  ];
+
+  function timeAgo(isoStr) {
+    const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
+    if (diff < 60)   return `${diff}s ago`;
+    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400)return `${Math.floor(diff/3600)}h ago`;
+    return `${Math.floor(diff/86400)}d ago`;
+  }
+
+  function formatTs(isoStr) {
+    return new Date(isoStr).toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function sourceBadge(source) {
+    if (source === 'instagram') return '<span class="badge badge-ig">📸 Instagram</span>';
+    return '<span class="badge badge-fb">📘 Facebook</span>';
+  }
+
+  function statusBadge(status) {
+    return `<span class="badge badge-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+  }
+
+  function renderActivities(activities) {
+    if (!activities.length) return '<p class="text-faint" style="font-size:12px;padding:8px 0">No activity yet</p>';
+    return activities.map(act => `
+      <div class="activity-item">
+        <div class="activity-dot"></div>
+        <div>
+          <div class="activity-text"><strong>${act.user}</strong> — ${act.text}</div>
+          <div class="activity-time">${formatTs(act.ts)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderFieldData(fieldData) {
+    return Object.entries(fieldData).map(([k, v]) => `
+      <div class="detail-row">
+        <div class="detail-label">${k}</div>
+        <div class="detail-value">${v}</div>
+      </div>
+    `).join('');
+  }
+
+  function render(lead) {
+    const statusOpts = statusOptions.map(s => `
+      <button class="status-opt ${lead.status === s.key ? `active-${s.key}` : ''}"
+              data-status="${s.key}">${s.label}</button>
+    `).join('');
+
+    return `
+      <div class="drawer-header">
+        <div class="drawer-avatar" style="background:linear-gradient(135deg,${lead.avatarColor},#6C47FF)">
+          ${lead.initials}
+        </div>
+        <div style="flex:1;min-width:0">
+          <div class="drawer-lead-name">${lead.name}</div>
+          <div class="drawer-lead-meta" style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            ${sourceBadge(lead.source)}
+            ${statusBadge(lead.status)}
+            <span style="color:var(--text-3);font-size:11px">${timeAgo(lead.createdAt)}</span>
+          </div>
+        </div>
+        <button class="drawer-close" id="drawer-close-btn">×</button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- CONTACT ACTIONS -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Quick Actions</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-success btn-sm" id="wa-btn">
+              💬 WhatsApp
+            </button>
+            <button class="btn btn-secondary btn-sm" id="call-btn">
+              📞 Call Exotel
+            </button>
+            <button class="btn btn-ghost btn-sm" id="zoho-btn">
+              📤 Push to Zoho
+            </button>
+          </div>
+        </div>
+
+        <!-- STATUS -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Status Pipeline</div>
+          <div class="status-select-row" id="status-opts">
+            ${statusOpts}
+          </div>
+        </div>
+
+        <!-- LEAD INFO -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Contact Details</div>
+          <div class="detail-row">
+            <div class="detail-label">Phone</div>
+            <div class="detail-value mono">${lead.phone}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Email</div>
+            <div class="detail-value" style="font-size:12px">${lead.email}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">City</div>
+            <div class="detail-value">${lead.city}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Client</div>
+            <div class="detail-value">${lead.clientName}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Campaign</div>
+            <div class="detail-value" style="font-size:12px">${lead.campaign}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Ad ID</div>
+            <div class="detail-value mono text-faint">${lead.adId}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Lead ID</div>
+            <div class="detail-value mono text-faint" style="font-size:11px">${lead.leadgenId}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Received</div>
+            <div class="detail-value" style="font-size:12px">${formatTs(lead.createdAt)}</div>
+          </div>
+        </div>
+
+        <!-- FORM DATA -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Form Responses (Meta field_data)</div>
+          ${renderFieldData(lead.fieldData)}
+        </div>
+
+        <!-- ASSIGN -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Assignment</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <select class="form-select" id="assign-select" style="flex:1">
+              <option value="">— Unassigned —</option>
+              ${LP.data.agents.map(a => `
+                <option value="${a.id}" ${lead.assignedTo?.id === a.id ? 'selected' : ''}>
+                  ${a.name} (${a.role})
+                </option>
+              `).join('')}
+            </select>
+            <button class="btn btn-secondary btn-sm" id="assign-btn">Assign</button>
+          </div>
+        </div>
+
+        <!-- NOTES -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Notes</div>
+          <textarea class="form-input" id="lead-note" rows="3"
+            placeholder="Add a note about this lead..."
+            style="resize:none;font-size:13px"></textarea>
+          <button class="btn btn-ghost btn-sm" style="margin-top:8px" id="save-note-btn">
+            Save Note
+          </button>
+        </div>
+
+        <!-- ACTIVITY LOG -->
+        <div class="drawer-section">
+          <div class="drawer-section-title">Activity Timeline</div>
+          <div id="activity-log">
+            ${renderActivities(lead.activities)}
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-actions">
+        <button class="btn btn-primary" style="flex:1" id="capi-push-btn">
+          🔁 Push to Meta CAPI
+        </button>
+        <button class="btn btn-ghost btn-icon" id="delete-lead-btn" title="Delete lead">🗑</button>
+      </div>
+    `;
+  }
+
+  function open(lead) {
+    currentLead = lead;
+    const overlay = document.getElementById('lead-drawer-overlay');
+    const drawer  = document.getElementById('lead-drawer');
+
+    drawer.innerHTML = render(lead);
+    overlay.classList.add('open');
+    drawer.classList.add('open');
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+
+    attachDrawerEvents(lead);
+  }
+
+  function close() {
+    const overlay = document.getElementById('lead-drawer-overlay');
+    const drawer  = document.getElementById('lead-drawer');
+    overlay.classList.remove('open');
+    drawer.classList.remove('open');
+    document.body.style.overflow = '';
+    currentLead = null;
+  }
+
+  function attachDrawerEvents(lead) {
+    // Close
+    document.getElementById('drawer-close-btn')?.addEventListener('click', close);
+    document.getElementById('lead-drawer-overlay')?.addEventListener('click', e => {
+      if (e.target === e.currentTarget) close();
+    });
+
+    // Status change
+    document.querySelectorAll('#status-opts .status-opt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const newStatus = btn.dataset.status;
+        lead.status = newStatus;
+
+        // Update button styles
+        document.querySelectorAll('#status-opts .status-opt').forEach(b => {
+          b.className = `status-opt${b.dataset.status === newStatus ? ` active-${newStatus}` : ''}`;
+        });
+
+        // Add activity
+        const activity = {
+          type: 'status_change',
+          text: `Status changed to <strong>${newStatus}</strong>`,
+          user: 'Agency Owner',
+          ts: new Date().toISOString(),
+        };
+        lead.activities.unshift(activity);
+        document.getElementById('activity-log').innerHTML = renderActivities(lead.activities);
+
+        // Update badge on sidebar
+        LP.sidebar.updateBadge();
+
+        LP.toast.success(`Status updated to ${newStatus}`, lead.name);
+
+        // If qualified, ask CAPI push
+        if (newStatus === 'qualified' || newStatus === 'won') {
+          setTimeout(() => LP.toast.info('Push to Meta CAPI?', 'Click CAPI button to optimize ad delivery'), 1000);
+        }
+      });
+    });
+
+    // WhatsApp
+    document.getElementById('wa-btn')?.addEventListener('click', () => {
+      const encoded = encodeURIComponent(`நல்வரவு ${lead.firstName}! LeadPulse CRM through we received your enquiry. Our team will contact you shortly. / நன்றி!`);
+      LP.toast.success('WhatsApp template sent!', `To ${lead.phone} via WhatsApp Cloud API`);
+      const activity = { type: 'wa_sent', text: 'WhatsApp template sent — DLT approved', user: 'Agency Owner', ts: new Date().toISOString() };
+      lead.activities.unshift(activity);
+      document.getElementById('activity-log').innerHTML = renderActivities(lead.activities);
+    });
+
+    // Call
+    document.getElementById('call-btn')?.addEventListener('click', () => {
+      LP.toast.info('Initiating Exotel call...', `Connecting to ${lead.phone}`);
+      const activity = { type: 'called', text: 'Click-to-call initiated via Exotel', user: 'Agency Owner', ts: new Date().toISOString() };
+      lead.activities.unshift(activity);
+      document.getElementById('activity-log').innerHTML = renderActivities(lead.activities);
+    });
+
+    // Push to Zoho
+    document.getElementById('zoho-btn')?.addEventListener('click', () => {
+      LP.toast.success('Lead pushed to Zoho CRM!', `${lead.name} synced successfully`);
+    });
+
+    // CAPI push
+    document.getElementById('capi-push-btn')?.addEventListener('click', () => {
+      LP.toast.success('CAPI event pushed to Meta!', `${lead.status === 'won' ? 'Purchase' : 'Lead'} event sent for ${lead.name}`);
+      const activity = { type: 'capi', text: `Meta CAPI event pushed — ${lead.status === 'won' ? 'Purchase' : 'Lead'}`, user: 'System', ts: new Date().toISOString() };
+      lead.activities.unshift(activity);
+      document.getElementById('activity-log').innerHTML = renderActivities(lead.activities);
+    });
+
+    // Assign
+    document.getElementById('assign-btn')?.addEventListener('click', () => {
+      const sel = document.getElementById('assign-select');
+      const agentId = sel.value;
+      const agent = LP.data.agents.find(a => a.id === agentId);
+      lead.assignedTo = agent || null;
+      LP.toast.success('Lead assigned', agent ? `Assigned to ${agent.name}` : 'Unassigned');
+    });
+
+    // Save note
+    document.getElementById('save-note-btn')?.addEventListener('click', () => {
+      const note = document.getElementById('lead-note')?.value?.trim();
+      if (!note) return;
+      const activity = { type: 'note', text: `Note: "${note}"`, user: 'Agency Owner', ts: new Date().toISOString() };
+      lead.activities.unshift(activity);
+      document.getElementById('activity-log').innerHTML = renderActivities(lead.activities);
+      document.getElementById('lead-note').value = '';
+      LP.toast.success('Note saved', '');
+    });
+
+    // Delete (demo only)
+    document.getElementById('delete-lead-btn')?.addEventListener('click', () => {
+      if (confirm(`Delete lead for ${lead.name}?`)) {
+        LP.data.leads = LP.data.leads.filter(l => l.id !== lead.id);
+        close();
+        LP.toast.warning('Lead deleted', 'This action is logged in the audit trail');
+      }
+    });
+  }
+
+  return { open, close };
+})();

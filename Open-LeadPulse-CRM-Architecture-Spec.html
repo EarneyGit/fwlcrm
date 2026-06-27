@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LeadPulse CRM - Meta Ads Lead Management System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: { meta: '#1877F2' },
+          fontFamily: { sans: ['Inter','system-ui','-apple-system','Segoe UI','Roboto','sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    .flow-arrow { stroke-dasharray: 5 5; animation: dash 1.2s linear infinite; }
+    @keyframes dash { to { stroke-dashoffset: -10 } }
+    .arch-node { transition: all .2s; }
+    .arch-node:hover rect { filter: brightness(0.97); }
+    .glass { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #334155; }
+  </style>
+</head>
+<body class="bg-[#f8fafc] dark:bg-[#050a14] text-slate-800 dark:text-slate-200 antialiased">
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-4 py-2 bg-slate-900 text-white text-sm rounded-full shadow-lg opacity-0 pointer-events-none transition-all"></div>
+
+  <!-- Header -->
+  <header class="sticky top-0 z-40 border-b border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-950/70 glass">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-[68px]">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-meta flex items-center justify-center shadow-md shadow-meta/20">
+            <i class="ri-flashlight-fill text-white text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-[17px] sm:text-xl font-semibold leading-tight">LeadPulse CRM <span class="text-meta">-</span> <span class="hidden sm:inline">Meta Ads Lead Management System</span></h1>
+            <p class="text-[12px] text-slate-500 dark:text-slate-400 -mt-0.5">Built for Chennai Performance Agencies</p>
+          </div>
+        <div class="flex items-center gap-2">
+          <span class="hidden md:inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> ap-south-1 Mumbai
+          </span>
+          <button id="theme-toggle" class="w-9 h-9 grid place-items-center rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition">
+            <i class="ri-sun-line dark:hidden"></i>
+            <i class="ri-moon-line hidden dark:block"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16">
+    
+    <!-- 1. Overview -->
+    <section>
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <h2 class="text-2xl font-semibold">System Overview</h2>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Multi-tenant, WhatsApp-first lead engine for Meta Lead Ads</p>
+        </div>
+        <div class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">INR Billing • GST Ready</div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition">
+          <div class="w-10 h-10 rounded-xl bg-meta/10 text-meta grid place-items-center mb-3"><i class="ri-timer-flash-line text-xl"></i></div>
+          <h3 class="font-semibold">Real-time Ingestion</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Webhook &lt;3s. Auto-fetch lead data via Graph API. Dedupe by leadgen_id.</p>
+          <div class="absolute top-3 right-3 text-[10px] px-2 py-0.5 rounded-full bg-meta/10 text-meta">P95 2.1s</div>
+        </div>
+        <div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition">
+          <div class="w-10 h-10 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 grid place-items-center mb-3"><i class="ri-building-2-line text-xl"></i></div>
+          <h3 class="font-semibold">Multi-tenant</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Agency → Clients → Ad Accounts. Row-level isolation. Roles: Owner/Admin/Agent.</p>
+        </div>
+        <div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 grid place-items-center mb-3"><i class="ri-whatsapp-line text-xl"></i></div>
+          <h3 class="font-semibold">WhatsApp-first</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Instant WhatsApp Cloud API. DLT-compliant templates. தமிழ் + English.</p>
+        </div>
+        <div class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 grid place-items-center mb-3"><i class="ri-loop-left-line text-xl"></i></div>
+          <h3 class="font-semibold">CAPI Feedback</h3>
+          <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Server-side Conversions API sends qualified/won back to Meta for optimization.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Architecture -->
+    <section id="architecture">
+      <h2 class="text-2xl font-semibold mb-2">System Architecture</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Click components. Chennai → Mumbai data residency.</p>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm">
+          <svg viewBox="0 0 900 520" class="w-full h-auto select-none" id="arch-svg">
+            <defs>
+              <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#64748b"/></marker>
+              <marker id="arrowMeta" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1877F2"/></marker>
+            </defs>
+            
+            <!-- Left Sources -->
+            <g class="arch-node cursor-pointer" data-id="fb">
+              <rect x="20" y="80" width="170" height="60" rx="12" fill="white" stroke="#1877F2" stroke-width="2"/>
+              <text x="105" y="115" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="600">Facebook Lead Ads</text>
+            </g>
+            <g class="arch-node cursor-pointer" data-id="ig">
+              <rect x="20" y="160" width="170" height="60" rx="12" fill="white" stroke="#1877F2" stroke-width="2"/>
+              <text x="105" y="195" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="600">Instagram Lead Ads</text>
+            </g>
+            
+            <!-- Webhook -->
+            <g class="arch-node cursor-pointer" data-id="webhook">
+              <rect x="280" y="30" width="210" height="70" rx="12" fill="white" stroke="#0ea5e9" stroke-width="2"/>
+              <text x="385" y="60" text-anchor="middle" fill="#0f172a" font-size="14" font-weight="600">Webhook Endpoint</text>
+              <text x="385" y="82" text-anchor="middle" fill="#64748b" font-size="11">Signature Verification</text>
+            </g>
+
+            <!-- Backend -->
+            <g class="arch-node cursor-pointer" data-id="backend">
+              <rect x="260" y="150" width="250" height="150" rx="16" fill="white" stroke="#334155" stroke-width="2"/>
+              <text x="385" y="180" text-anchor="middle" fill="#0f172a" font-size="15" font-weight="700">Backend API</text>
+              <text x="385" y="200" text-anchor="middle" fill="#64748b" font-size="12">Node.js / Python Fastify</text>
+              <rect x="280" y="220" width="210" height="60" rx="10" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+              <text x="385" y="255" text-anchor="middle" fill="#92400e" font-size="13" font-weight="600">Redis Queue (Mumbai)</text>
+            </g>
+
+            <!-- DB -->
+            <g class="arch-node cursor-pointer" data-id="db">
+              <rect x="590" y="150" width="180" height="150" rx="16" fill="white" stroke="#334155" stroke-width="2"/>
+              <text x="680" y="205" text-anchor="middle" fill="#0f172a" font-size="15" font-weight="700">PostgreSQL</text>
+              <text x="680" y="227" text-anchor="middle" fill="#64748b" font-size="12">RDS ap-south-1</text>
+              <text x="680" y="245" text-anchor="middle" fill="#64748b" font-size="11">JSONB + pg_trgm</text>
+            </g>
+
+            <!-- Bottom -->
+            <g class="arch-node cursor-pointer" data-id="dashboard">
+              <rect x="20" y="380" width="170" height="70" rx="12" fill="white" stroke="#6366f1" stroke-width="2"/>
+              <text x="105" y="410" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">React Dashboard</text>
+              <text x="105" y="430" text-anchor="middle" fill="#64748b" font-size="11">Multi-tenant UI</text>
+            </g>
+            <g class="arch-node cursor-pointer" data-id="wa">
+              <rect x="220" y="380" width="170" height="70" rx="12" fill="white" stroke="#22c55e" stroke-width="2"/>
+              <text x="305" y="410" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">WhatsApp Cloud API</text>
+              <text x="305" y="430" text-anchor="middle" fill="#64748b" font-size="11">DLT India</text>
+            </g>
+            <g class="arch-node cursor-pointer" data-id="crm">
+              <rect x="420" y="380" width="170" height="70" rx="12" fill="white" stroke="#8b5cf6" stroke-width="2"/>
+              <text x="505" y="410" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Client CRMs</text>
+              <text x="505" y="430" text-anchor="middle" fill="#64748b" font-size="11">Zoho / HubSpot</text>
+            </g>
+            <g class="arch-node cursor-pointer" data-id="capi">
+              <rect x="620" y="380" width="170" height="70" rx="12" fill="white" stroke="#1877F2" stroke-width="2"/>
+              <text x="705" y="410" text-anchor="middle" fill="#0f172a" font-size="13" font-weight="600">Meta CAPI</text>
+              <text x="705" y="430" text-anchor="middle" fill="#64748b" font-size="11">Feedback Loop</text>
+            </g>
+
+            <!-- Arrows -->
+            <path d="M190 110 H 280" stroke="#1877F2" stroke-width="2" marker-end="url(#arrowMeta)" class="flow-arrow"/>
+            <path d="M190 190 H 280" stroke="#1877F2" stroke-width="2" marker-end="url(#arrowMeta)" class="flow-arrow"/>
+            <text x="235" y="100" font-size="11" fill="#1877F2" font-weight="600">&lt;3s</text>
+            
+            <path d="M385 100 V 150" stroke="#0ea5e9" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M510 225 H 590" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M385 300 V 380" stroke="#334155" stroke-width="2" marker-end="url(#arrow)"/>
+            <path d="M340 300 C 340 285 350 230 380" stroke="#334155" stroke-width="2" marker-end="url(#arrow)" fill="none"/>
+            <path d="M430 300 C 430 340 470 350 505 380" stroke="#334155" stroke-width="2" marker-end="url(#arrow)" fill="none"/>
+            <path d="M385 300 C 385 330 620 340 680 380" stroke="#1877F2" stroke-width="2" marker-end="url(#arrowMeta)" fill="none" stroke-dasharray="4 4"/>
+          </svg>
+          <div class="mt-3 flex flex-wrap gap-2 text-[11px]">
+            <span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800">Chennai advertisers → Mumbai processing</span>
+            <span class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800">PII encrypted at rest</span>
+            <span class="px-2 py-1 rounded bg-meta/10 text-meta">Webhook SLA &lt;3s</span>
+          </div>
+        </div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm h-fit lg:sticky lg:top-[88px]">
+          <h3 class="font-semibold mb-1">Component Details</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Tap any block in diagram</p>
+          <div id="arch-detail" class="min-h-[160px]"></div>
+          <div class="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <div class="text-[12px] font-medium mb-2">Data Flow Timing</div>
+            <div class="space-y1.5 text-[12px] text-slate-600 dark:text-slate-400">
+              <div class="flex justify-between"><span>Meta → Webhook</span><span class="font-mono">0-3s</span></div>
+              <div class="flex justify-between"><span>Verify + Queue</span><span class="font-mono">&lt;500ms</span></div>
+              <div class="flex justify-between"><span>Fetch lead + Normalize +91</span><span class="font-mono">2-4s</span></div>
+              <div class="flex justify-between"><span>DB write + WhatsApp</span><span class="font-mono">8-12s</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Schema -->
+    <section id="schema">
+      <h2 class="text-2xl font-semibold mb-2">Database Schema</h2>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">PostgreSQL with JSONB for flexible Meta forms. Indian compliance fields built-in.</p>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-6 shadow-sm overflow-x-auto">
+        <div class="mermaid min-w-[720px]">
+erDiagram
+    tenants ||--o{ users : has
+    tenants ||--o{ clients : manages
+    clients ||--o{ ad_accounts : owns
+    ad_accounts ||--o{ forms : contains
+    forms ||--o{ leads : generates
+    leads ||--o{ lead_activities : logs
+    users ||--o{ lead_activities : performs
+
+    tenants {
+        uuid id PK
+        varchar name
+        varchar gstin "18 chars India"
+        varchar plan "starter/pro"
+        varchar billing_city "Chennai"
+        timestamptz created_at
+    }
+    users {
+        uuid id PK
+        uuid tenant_id FK
+        varchar email
+        varchar phone "+91 normalized"
+        varchar role "owner,admin,agent"
+        varchar locale "en-IN,ta-IN"
+    }
+    clients {
+        uuid id PK
+        uuid tenant_id FK
+        varchar name
+        varchar industry "real-estate,edu"
+        varchar city
+    }
+    ad_accounts {
+        uuid id PK
+        uuid client_id FK
+        varchar meta_account_id "act_xxx"
+        text access_token_encrypted
+        varchar token_status
+    }
+    forms {
+        uuid id PK
+        uuid ad_account_id FK
+        varchar form_id "Meta ID"
+        varchar name
+        jsonb fields_json
+        boolean is_active
+    }
+    leads {
+        uuid id PK
+        uuid form_id FK
+        varchar leadgen_id UK
+        varchar phone_normalized "+91XXXXXXXXXX"
+        varchar email
+        jsonb field_data
+        varchar ad_id
+        varchar campaign_name
+        varchar status "new,contacted,qualified"
+        uuid assigned_to FK
+        timestamptz created_time
+        varchar source "facebook,instagram"
+    }
+    lead_activities {
+        uuid id PK
+        uuid lead_id FK
+        uuid user_id FK
+        varchar action "wa_sent,called,qualified"
+        jsonb meta
+        timestamptz ts
+    }
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Meta Integration -->
+    <section id="meta">
+      <h2 class="text-2xl font-semibold mb-6">Meta Integration Details</h2>
+      <div class="grid lg:grid-cols-5 gap-6">
+        <div class="lg:col-span-3 space-y-6">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold">OAuth Permissions</h3>
+              <span class="text-[11px] px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">App Review Required</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-left text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                  <tr><th class="py-2 pr-4 font-medium">Permission</th><th class="py-2 pr-4 font-medium">Why</th><th class="py-2 pr-4 font-medium">Chennai Note</th></tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                  <tr><td class="py-2.5 pr-4 font-mono text-[12px]">pages_show_list</td><td class="py-2.5 pr-4">List client Pages</td><td class="py-2.5 pr-4 text-slate-500">Agency onboarding</td></tr>
+                  <tr><td class="py-2.5 pr-4 font-mono text-[12px]">pages_read_engagement</td><td class="py-2.5 pr-4">Subscribe webhooks</td><td class="py-2.5 pr-4 text-slate-500">Required for RTU</td></tr>
+                  <tr><td class="py-2.5 pr-4 font-mono text-[12px]">leads_retrieval</td><td class="py-2.5 pr-4">Fetch lead data</td><td class="py-2.5 pr-4 text-slate-500">Core permission</td></tr>
+                  <tr><td class="py-2.5 pr-4 font-mono text-[12px]">ads_management</td><td class="py-2.5 pr-4">Read campaign/ad names</td><td class="py-2.5 pr-4 text-slate-500">For attribution</td></tr>
+                  <tr><td class="py-2.5 pr-4 font-mono text-[12px]">business_management</td><td class="py-2.5 pr-4">Multi-client access</td><td class="py-2.5 pr-4 text-slate-500">Agency BM</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-semibold">Webhook Verification (Node.js)</h3>
+              <button data-copy="webhook" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1"><i class="ri-file-copy-line"></i>Copy</button>
+            </div>
+            <pre class="bg-slate-950 text-slate-100 rounded-xl p-4 overflow-x-auto text-[12px] leading-relaxed"><code id="webhook-code"></code></pre>
+          </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-6">
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold mb-3">Lead Fetch API</h3>
+            <div class="space-y-3 text-sm">
+              <div>
+                <div class="text-[11px] text-slate-500 mb-1">Endpoint</div>
+                <div class="font-mono text-[12px] bg-slate-100 dark:bg-slate-800 px-2 py-1.5 rounded">GET /{leadgen_id}?fields=id,created_time,field_data,ad_id,form_id</div>
+              </div>
+              <button data-copy="api" class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1"><i class="ri-file-copy-line"></i>Copy cURL</button>
+              <pre class="bg-slate-950 text-slate-100 rounded-xl p-3 overflow-x-auto text-[11px]"><code id="api-code"></code></pre>
+            </div>
+          </div>
+
+          <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <h3 class="font-semibold mb-3">Rate Limit Strategy</h3>
+            <ul class="space-y-2.5 text-sm">
+              <li class="flex gap-2.5"><i class="ri-speed-up-line text-meta mt-0.5"></i><div><b>200 calls/user/hr</b> – queue & batch fetch worker in Mumbai</div></li>
+              <li class="flex gap-2.5"><i class="ri-restart-line text-meta mt-0.5"></i><div>Exponential backoff on 429. Respect x-business-use-case-usage</div></li>
+              <li class="flex gap-2.5"><i class="ri-shield-keyhole-line text-meta mt-0.5"></i><div>Token rotation per client. Encrypt with KMS.</div></li>
+              <li class="flex gap-2.5"><i class="ri-india-map-line text-meta mt-0.5"></i><div>India data: never leave ap-south-1. Log IP for audit.</div></li>
+            </ul>
+          </div>
+
+          <div class="bg-gradient-to-br from-meta/10 to-violet-500/10 border border-meta/20 rounded-2xl p-5">
+            <h4 class="font-semibold text-sm mb-1">+91 Phone Normalization</h4>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Strip 0, add +91, validate with libphonenumber. Store as E.164 for WhatsApp & CAPI hashing.</p>
+            <code class="text-[11px] font-mono">+919876543210</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Lead Flow -->
+    <section id="flow">
+      <h2 class="text-2xl font-semibold mb-6">Lead Flow Timeline</h2>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-8 shadow-sm">
+        <div class="relative">
+          <div class="absolute left-[18px] sm:left-[22px] top-2 bottom-2 w-px bg-gradient-to-b from-meta via-violet-500 to-emerald-500"></div>
+          <ol class="space-y-6">
+            <li class="relative pl-12 sm:pl-14">
+              <div class="absolute left-0 top-0 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-meta text-white grid place-items-center shadow-md shadow-meta/20"><i class="ri-advertisement-line"></i></div>
+              <div class="flex flex-wrap items-baseline gap-2"><h4 class="font-semibold">Ad Click (Chennai)</h4><span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">0s</span></div>
+              <p class="text-sm text-slate-600 dark:text-slate-400">User in Tamil Nadu sees Facebook/Instagram Lead Ad in Tamil/English.</p>
+            </li>
+            <li class="relative pl-12 sm:pl-14">
+              <div class="absolute left-0 top-0 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-slate-800 dark:bg-slate-700 text-white grid place-items-center"><i class="ri-edit-2-line"></i></div>
+              <div class="flex items-baseline gap-2"><h4 class="font-semibold">Form Submit</h4><span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">1-2s</span></div>
+              <p class="text-sm text-slate-600 dark:text-slate-400">Meta generates leadgen_id. No PII in webhook.</p>
+            </li>
+            <li class="relative pl-12 sm:pl-14">
+              <div class="absolute left-0 top-0 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-sky-600 text-white grid place-items-center"><i class="ri-webhook-line"></i></div>
+              <div class="flex items-baseline gap-2"><h4 class="font-semibold">Webhook Hit Mumbai</h4><span class="text-[11px] px-2 py-0.5 rounded-full bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300">&lt;3s</span></div>
+              <p class="text-sm text-slate-600 dark:text-slate-400">Verify X-Hub-Signature-256. Enqueue leadgen_id to Redis.</p>
+            </li>
+            <li class="relative pl-12 sm:pl-14">
+              <div class="absolute left-0 top-0 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-violet-600 text-white grid place-items-center"><i class="ri-download-2-line"></i></div>
+              <div class="flex items-baseline gap-2"><h4 class="font-semibold">Fetch & Normalize</h4><span class="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">3-7s</span></div>
+              <p class="text-sm text-slate-600 dark:text-slate-400">GET lead data. Normalize phone to +91, dedupe, map to client.</p>
+            </li>
+            <li class="relative pl-12 sm:pl-14">
+              <div class="absolute left-0 top-0 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-emerald-600 text-white grid place-items-center"><i class="ri-whatsapp-line"></i></div>
+              <div class="flex items-baseline gap-2"><h4 class="font-semibold">WhatsApp + Dashboard Alert</h4><span class="text-[11px] px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">&lt;15s</span></div>
+              <p class="text-sm text-slate-600 dark:text-slate-400">Send DLT-approved template in தமிழ். Assign to Chennai agent. Push to Zoho.</p>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Tech Stack -->
+    <section id="stack">
+      <h2 class="text-2xl font-semibold mb-6">Tech Stack for India</h2>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5"><div class="flex items-center gap-3 mb-2"><i class="ri-amazon-line text-xl text-orange-500"></i><h4 class="font-semibold">AWS Mumbai (ap-south-1)</h4></div><p class="text-sm text-slate-600 dark:text-slate-400">API Gateway, Lambda, RDS PostgreSQL, ElastiCache Redis. Data stays in India.</p></div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5"><div class="flex items-center gap-3 mb-2"><i class="ri-database-2-line text-xl text-sky-600"></i><h4 class="font-semibold">PostgreSQL + Redis</h4></div><p class="text-sm text-slate-600 dark:text-slate-400">JSONB for dynamic forms, pg_trgm for dedupe, PITR backups.</p></div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5"><div class="flex items-center gap-3 mb-2"><i class="ri-reactjs-line text-xl text-cyan-500"></i><h4 class="font-semibold">React + Vite</h4></div><p class="text-sm text-slate-600 dark:text-slate-400">Multi-tenant dashboard, role-based, Tamil i18n (ta-IN).</p></div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5"><div class="flex items-center gap-3 mb-2"><i class="ri-whatsapp-line text-xl text-emerald-500"></i><h4 class="font-semibold">WhatsApp Cloud API</h4></div><p class="text-sm text-slate-600 dark:text-slate-400">Meta-hosted. DLT template ID mandatory for India. Fallback MSG91 SMS.</p></div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5"><div class="flex items-center gap-3 mb-2"><i class="ri-shield-check-line text-xl text-meta"></i><h4 class="font-semibold">Security</h4></div><p class="text-sm text-slate-600 dark:text-slate-400">KMS encryption, webhook signing, audit logs, IP allowlist.</p></div>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5"><div class="flex items-center gap-3 mb-2"><i class="ri-money-rupee-circle-line text-xl text-green-600"></i><h4 class="font-semibold">Billing</h4></div><p class="text-sm text-slate-600 dark:text-slate-400">Razorpay UPI, GST invoices (18%), plans ₹4,999 / ₹14,999.</p></div>
+      </div>
+    </section>
+
+    <!-- 7. Deployment -->
+    <section id="deploy">
+      <h2 class="text-2xl font-semibold mb-6">Deployment Checklist – Chennai Agency</h2>
+      <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm">
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="font-semibold text-sm uppercase tracking-wide text-slate-500 mb-3">Meta App Review</h4>
+            <ul id="checklist" class="space-y-2.5 text-sm">
+              <li><label class="flex gap-3 cursor-pointer"><input type="checkbox" class="mt-0.5 accent-meta" data-key="review"><span><b>Business Verification</b> – GSTIN, Chennai address, domain verification</span></label></li>
+              <li><label class="flex gap-3 cursor-pointer"><input type="checkbox" class="mt-0.5 accent-meta" data-key="privacy"><span><b>Privacy Policy URL</b> – /privacy (English + Tamil)</span></label></li>
+              <li><label class="flex gap-3 cursor-pointer"><input type="checkbox" class="mt-0.5 accent-meta" data-key="tos"><span><b>Terms of Service</b> – /terms</span></label></li>
+              <li><label class="flex gap-3 cursor-pointer"><input type="checkbox" class="mt-0.5 accent-meta" data-key="deletion"><span><b>Data Deletion Callback</b> – POST /meta/data-deletion</span></label></li>
+              <li><label class="flex gap-3 cursor-pointer"><input type="checkbox" class="mt-0.5 accent-meta" data-key="screencast"><span><b>App Review Screencast</b> – show lead retrieval + WhatsApp</span></label></li>
+            </ul>
+          </div>
+          <div>
+            <h4 class="font-semibold text-sm uppercase tracking-wide text-slate-500 mb-3">India Compliance</h4>
+            <ul class="space-y-2.5 text-sm">
+              <li class="flex gap-3"><i class="ri-checkbox-circle-line text-emerald-500 mt-0.5"></i><span><b>WhatsApp Business Verification</b> + DLT template approval (PE ID, Template ID)</span></li>
+              <li class="flex gap-3"><i class="ri-checkbox-circle-line text-emerald-500 mt-0.5"></i><span><b>AWS Mumbai only</b> – no cross-region replication for PII</span></li>
+              <li class="flex gap-3"><i class="ri-checkbox-circle-line text-emerald-500 mt-0.5"></i><span><b>GST Invoicing</b> – Razorpay with HSN 998314, 18% IGST</span></li>
+              <li class="flex gap-3"><i class="ri-checkbox-circle-line text-emerald-500 mt-0.5"></i><span><b>Consent logging</b> – store Meta form consent timestamp</span></li>
+              <li class="flex gap-3"><i class="ri-checkbox-circle-line text-emerald-500 mt-0.5"></i><span><b>Tamil support</b> – UI + WhatsApp templates ta-IN</span></li>
+            </ul>
+            <div class="mt-4 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-[12px] text-amber-800 dark:text-amber-200">
+              Tip: Meta India reviewers expect a Chennai business address and working WhatsApp opt-in demo.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-200 dark:border-slate-800 py-8 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-lg bg-meta grid place-items-center text-white"><i class="ri-flashlight-fill text-[14px]"></i></div>
+        <span>LeadPulse CRM</span>
+      </div>
+      <div>Ready for dev handoff – Chennai, 2026 • Multi-tenant • Meta Lead Ads API v19.0</div>
+    </div>
+  </footer>
+
+  <script>
+    // Theme
+    const html = document.documentElement;
+    const toggle = document.getElementById('theme-toggle');
+    const saved = localStorage.getItem('theme');
+    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) html.classList.add('dark');
+    toggle.onclick = () => { html.classList.toggle('dark'); localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light'); initMermaid(); };
+
+    // Toast
+    const toast = document.getElementById('toast');
+    function showToast(msg) { toast.textContent = msg; toast.style.opacity = '1'; toast.style.pointerEvents = 'auto'; setTimeout(()=>{ toast.style.opacity='0'; toast.style.pointerEvents='none'; }, 1800); }
+
+    // Architecture details
+    const archDetails = {
+      fb: { title:'Facebook Lead Ads', icon:'ri-facebook-circle-fill', desc:'Source of leads from Chennai real estate & education campaigns. Sends real-time update with leadgen_id only.', note:'Subscribe Page to app via /subscribed_apps.' },
+      ig: { title:'Instagram Lead Ads', icon:'ri-instagram-fill', desc:'Same webhook as Facebook. Critical for D2C brands targeting 18-34 in Tamil Nadu.', note:'Requires pages_read_engagement.' },
+      webhook: { title:'Webhook Endpoint (Mumbai)', icon:'ri-webhook-line', desc:'AWS API Gateway + Lambda in ap-south-1. Verifies X-Hub-Signature-256, responds in <200ms to avoid retries.', note:'Verify token stored in Secrets Manager.' },
+      backend: { title:'Backend API + Redis', icon:'ri-server-line', desc:'Fastify workers: fetch lead, normalize +91 phone via libphonenumber, dedupe, write to PG, enqueue WhatsApp.', note:'Idempotency via leadgen_id UNIQUE index.' },
+      db: { title:'PostgreSQL RDS', icon:'ri-database-2-fill', desc:'Multi-tenant with RLS. JSONB field_data stores dynamic Meta questions. Partition leads by month.', note:'Encrypted at rest. Backup to Mumbai only.' },
+      dashboard: { title:'React Dashboard', icon:'ri-dashboard-line', desc:'Agency owner sees all clients, billing in INR. Agent sees assigned leads. Tamil locale.', note:'Vite + TanStack Query, WebSocket for live leads.' },
+      wa: { title:'WhatsApp Cloud API', icon:'ri-whatsapp-fill', desc:'Instant message via Meta Cloud. India DLT mandatory: Principal Entity ID + approved template in Tamil/English.', note:'Fallback to SMS via MSG91 if WhatsApp fails.' },
+      crm: { title:'Client CRMs', icon:'ri-customer-service-2-fill', desc:'Native sync to Zoho CRM (popular in Chennai) and HubSpot via OAuth. Maps lead source to campaign.', note:'2-way status sync.' },
+      capi: { title:'Meta Conversions API', icon:'ri-loop-left-line', desc:'Sends server-side events: Lead, Qualified, Won with hashed +91 and email. Improves ad optimization.', note:'Uses same pixel ID as ad account.' }
+    };
+    const detailEl = document.getElementById('arch-detail');
+    function showDetail(id){ const d = archDetails[id]; detailEl.innerHTML = `<div class="flex gap-3"><div class="w-10 h-10 rounded-xl bg-meta/10 text-meta grid place-items-center shrink-0"><i class="${d.icon} text-xl"></i></div><div><h4 class="font-semibold leading-tight">${d.title}</h4><p class="text-sm text-slate-600 dark:text-slate-400 mt-1.5">${d.desc}</p><p class="text-[12px] mt-2 text-slate-500">${d.note}</p></div></div>`; document.querySelectorAll('.arch-node rect').forEach(r=>r.setAttribute('stroke-width','2')); document.querySelector(`[data-id="${id}"] rect`)?.setAttribute('stroke-width','3'); }
+    document.querySelectorAll('.arch-node').forEach(n=> n.addEventListener('click', ()=> showDetail(n.dataset.id)));
+    showDetail('webhook');
+
+    // Code snippets
+    const webhookCode = `// Node.js (Express/Fastify) - Meta Webhook
+app.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+  if (mode === 'subscribe' && token === process.env.META_VERIFY_TOKEN) {
+    return res.status(200).send(challenge);
+  }
+  return res.sendStatus(403);
+});
+
+app.post('/webhook', express.json({
+  verify: (req, res, buf) => { req.rawBody = buf }
+}), async (req, res) => {
+  const sig = req.headers['x-hub-signature-256'] || '';
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', process.env.META_APP_SECRET)
+    .update(req.rawBody)
+    .digest('hex');
+  if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+    return res.sendStatus(401);
+  }
+  // ACK fast (<1s)
+  res.sendStatus(200);
+
+  const leadgenId = req.body.entry?.[0]?.changes?.[0]?.value?.leadgen_id;
+  if (leadgenId) await redis.lpush('leads:queue', leadgenId);
+});`;
+    const apiCode = `curl -G "https://graph.facebook.com/v19.0/<LEADGEN_ID>" \\
+  -d "fields=id,created_time,field_data,ad_id,form_id" \\
+  -d "access_token=<PAGE_ACCESS_TOKEN>"
+
+# Response includes phone, email etc.
+# Normalize in backend:
+# phone = parsePhoneNumber(field_data.phone, 'IN').format('E.164') // +91XXXXXXXXXX`;
+
+    document.getElementById('webhook-code').textContent = webhookCode;
+    document.getElementById('api-code').textContent = apiCode;
+
+    document.querySelectorAll('[data-copy]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const target = btn.dataset.copy;
+        const text = target === 'webhook' ? webhookCode : apiCode;
+        navigator.clipboard.writeText(text).then(()=> showToast('Copied to clipboard'));
+      });
+    });
+
+    // Mermaid
+    function initMermaid(){
+      const theme = html.classList.contains('dark') ? 'dark' : 'default';
+      mermaid.initialize({ startOnLoad:false, theme, themeVariables:{ primaryColor:'#1877F2', primaryBorderColor:'#0f172a' } });
+      const el = document.querySelector('.mermaid');
+      if (el && el.getAttribute('data-processed')) { el.removeAttribute('data-processed'); el.innerHTML = el.textContent; }
+      mermaid.run({ querySelector:'.mermaid' });
+    }
+    initMermaid();
+
+    // Checklist persistence
+    document.querySelectorAll('#checklist input').forEach(cb=>{
+      const key = 'lp_'+cb.dataset.key;
+      cb.checked = localStorage.getItem(key)==='1';
+      cb.addEventListener('change', ()=> localStorage.setItem(key, cb.checked?'1':'0'));
+    });
+  </script>
+<script>(function(){document.addEventListener("click",function(e){var a=e.target.closest("[data-product-id]");if(!a)return;e.preventDefault();var pid=a.getAttribute("data-product-id");if(pid)parent.postMessage({type:"ecto-artifact-link-click",productId:pid},"*")})})();</script>
+</body>
+</html>
