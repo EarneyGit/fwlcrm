@@ -158,7 +158,7 @@ LP.drawer = (() => {
             <select class="form-select" id="assign-select" style="flex:1">
               <option value="">— Unassigned —</option>
               ${LP.data.agents.map(a => `
-                <option value="${a.id}" ${lead.assignedTo?.id === a.id ? 'selected' : ''}>
+                <option value="${a.id}" ${(lead.assignedTo?.id || lead.assignedTo) === a.id ? 'selected' : ''}>
                   ${a.name} (${a.role})
                 </option>
               `).join('')}

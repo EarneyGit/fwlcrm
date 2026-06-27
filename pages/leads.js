@@ -81,13 +81,16 @@ LP.pages.leads = (() => {
         </td>
         <td>${statusBadge(lead.status)}</td>
         <td>
-          ${lead.assignedTo
-            ? `<div style="display:flex;align-items:center;gap:6px">
-                <div style="width:22px;height:22px;border-radius:50%;background:${lead.assignedTo.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white">${lead.assignedTo.initials}</div>
-                <span style="font-size:12px">${lead.assignedTo.name.split(' ')[0]}</span>
-               </div>`
-            : '<span style="color:var(--text-3);font-size:12px">Unassigned</span>'
-          }
+          ${(() => {
+            const agentId = lead.assignedTo?.id || lead.assignedTo;
+            const agent = LP.data.agents.find(a => a.id === agentId);
+            return agent
+              ? `<div style="display:flex;align-items:center;gap:6px">
+                  <div style="width:22px;height:22px;border-radius:50%;background:${agent.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white">${agent.initials}</div>
+                  <span style="font-size:12px">${agent.name.split(' ')[0]}</span>
+                 </div>`
+              : '<span style="color:var(--text-3);font-size:12px">Unassigned</span>';
+          })()}
         </td>
         <td>
           <div style="font-size:12px;color:var(--text-2)">${lead.city}</div>
