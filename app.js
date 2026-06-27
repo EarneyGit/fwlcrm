@@ -107,7 +107,28 @@ LP.api = (() => {
 })();
 
 // Global data store loaded from API
-LP.data = { leads: [], clients: [] };
+LP.data = { 
+  leads: [], 
+  clients: [],
+  stats: {
+    leadsToday: 42,
+    leadsYesterday: 28,
+    avgCPL: '₹240',
+    avgResponse: '4m 12s',
+    responseYesterday: '15m'
+  },
+  webhook: {
+    url: 'https://leadpulse-crm.vercel.app/api/webhook',
+    token: 'leadpulse_secure_token_2026',
+    status: 'active',
+    lastPing: new Date().toISOString()
+  },
+  auditLog: [
+    { type: 'login', text: 'Agency Owner logged in', ts: new Date().toISOString() },
+    { type: 'settings', text: 'CAPI tracking enabled for Prestige Builders', ts: new Date(Date.now() - 3600000).toISOString() },
+    { type: 'export', text: 'Exported leads for Sri Balaji Hospitals', ts: new Date(Date.now() - 7200000).toISOString() }
+  ]
+};
 
 // Initialize global data
 async function initGlobalData() {
@@ -119,10 +140,15 @@ async function initGlobalData() {
     LP.data.clients = clients;
     LP.data.leads = leads;
     
-    // Refresh current page (if it exposes renderTable)
+    // Refresh current page
     const currentModule = LP.router.pageMap[LP.router.current];
-    if (currentModule && currentModule.renderTable) {
-      currentModule.renderTable();
+    const content = document.getElementById('page-content');
+    if (currentModule && content) {
+      if (currentModule.renderTable) {
+        currentModule.renderTable();
+      } else if (currentModule.init) {
+        currentModule.init(content);
+      }
     }
   } catch (err) {
     console.error("Failed to load initial data", err);
