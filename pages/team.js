@@ -244,10 +244,10 @@ LP.pages.team = (() => {
         role,
         initials,
         color,
-        avatar: \`https://i.pravatar.cc/150?u=\${id}\`
+        avatar: `https://i.pravatar.cc/150?u=${id}`
       });
 
-      LP.toast.success('Agent Added', \`\${name} has been added to the team\`);
+      LP.toast.success('Agent Added', `${name} has been added to the team`);
       close();
       init(container); // Re-render the page to show new agent
     });
