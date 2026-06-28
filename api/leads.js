@@ -1,4 +1,5 @@
 const db = require('./_db');
+const { sendCapiEvent, STATUS_EVENT_MAP } = require('./capi');
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -99,13 +100,10 @@ export default async function handler(req, res) {
       const { rows } = await db.query(query, values);
       
       if (rows.length === 0) return res.status(404).json({ error: 'Lead not found' });
-      res.status(200).json(rows[0]);
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'Failed to update lead' });
-    }
-  } else {
-    res.setHeader('Allow', ['GET', 'POST', 'PATCH']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
-  }
-}
+
+      // Fire CAPI event if status changed
+      if (status && STATUS_EVENT_MAP[status]) {
+        const lead = rows[0];
+        const capiExtra = status === 'won'
+          ? { currency: 'INR', value: lead.cpl || '0' }
+ 
