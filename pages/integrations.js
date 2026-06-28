@@ -7,8 +7,6 @@ window.LP = window.LP || {};
 LP.pages = LP.pages || {};
 
 LP.pages.integrations = (() => {
-  const wb = LP.data.webhook;
-
   function timeAgo(isoStr) {
     const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
     if (diff < 60)   return `${diff}s ago`;
@@ -26,6 +24,7 @@ LP.pages.integrations = (() => {
   }
 
   function render() {
+    const wb = LP.data.webhook;
     return `
       <div class="page-header">
         <div>
