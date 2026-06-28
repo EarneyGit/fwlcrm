@@ -134,4 +134,36 @@ async function initDB() {
     for (const c of clients) {
       await pool.query(`
         INSERT INTO clients (id, name, industry, city, color, icon, account_id, forms, token_days, status, leads_today, cpl, conv_rate, total_leads, campaigns)
-        VALUES ($1, $2, $3, $4, $5, $6
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      `, [c.id, c.name, c.industry, c.city, c.color, c.icon, c.accountId, c.forms, c.tokenDays, c.status, c.leadsToday, c.cpl, c.convRate, c.totalLeads, c.campaigns]);
+    }
+    console.log("✅ Clients inserted.");
+
+    // Insert agents
+    for (const a of agents) {
+      await pool.query(`
+        INSERT INTO agents (id, name, initials, color, role, email, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `, [a.id, a.name, a.initials, a.color, a.role, a.email, a.status]);
+    }
+    console.log("✅ Agents inserted.");
+
+    // Insert leads
+    const leads = generateLeads(50);
+    for (const l of leads) {
+      await pool.query(`
+        INSERT INTO leads (id, leadgen_id, name, first_name, last_name, phone, email, city, status, source, client_id, campaign, ad_id, created_at, sla_breached)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      `, [l.id, l.leadgen_id, l.name, l.first_name, l.last_name, l.phone, l.email, l.city, l.status, l.source, l.client_id, l.campaign, l.ad_id, l.created_at, l.sla_breached]);
+    }
+    console.log("✅ 50 Mock Leads inserted.");
+
+    console.log("🎉 Database initialization complete!");
+  } catch (error) {
+    console.error("Error initializing DB:", error);
+  } finally {
+    pool.end();
+  }
+}
+
+initDB();

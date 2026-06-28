@@ -95,4 +95,98 @@ async function resolveClientId(pageId) {
 }
 
 export default async function handler(req, res) {
-  // ── Webhook Verif
+  // ── Webhook Verification (GET from Meta) ─────────────────
+  if (req.method === 'GET') {
+    const mode      = req.query['hub.mode'];
+    const token     = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      console.log('Webhook verified');
+      return res.status(200).send(challenge);
+    }
+    return res.status(403).json({ error: 'Verification failed' });
+  }
+
+  // ── Webhook Payload (POST from Meta) ─────────────────────
+  if (req.method === 'POST') {
+    // Read raw body bytes for HMAC verification (bodyParser is disabled)
+    const rawBodyBuffer = await getRawBody(req);
+    const sigHeader     = req.headers['x-hub-signature-256'];
+
+    if (!verifySignature(rawBodyBuffer, sigHeader)) {
+      console.warn('Webhook signature mismatch — request rejected');
+      return res.status(403).json({ error: 'Invalid signature' });
+    }
+
+    let body;
+    try {
+      body = JSON.parse(rawBodyBuffer.toString('utf8'));
+    } catch {
+      return res.status(400).json({ error: 'Invalid JSON' });
+    }
+
+    if (body.object !== 'page') {
+      return res.status(404).end();
+    }
+
+    for (const entry of body.entry || []) {
+      for (const change of entry.changes || []) {
+        if (change.field !== 'leadgen') continue;
+
+        const leadData  = change.value;
+        const leadgenId = String(leadData.leadgen_id);
+        const pageId    = String(leadData.page_id   || entry.id || '');
+        const adId      = String(leadData.ad_id     || '');
+        const campaign  = String(leadData.form_name || leadData.campaign_name || 'Meta Ads');
+
+        try {
+          // Fetch real contact details via Graph API
+          const graphLead = await fetchLeadFromMeta(leadgenId);
+
+          let firstName, lastName, phone, email, city, fieldData;
+
+          if (graphLead?.field_data) {
+            ({ firstName, lastName, phone, email, city, fieldData } = parseLeadFields(graphLead.field_data));
+          } else {
+            // Fallback: store what we have, fill details later
+            firstName = 'Unknown';
+            lastName  = 'Lead';
+            phone     = '';
+            email     = '';
+            city      = '';
+            fieldData = {};
+          }
+
+          const name     = `${firstName} ${lastName}`.trim();
+          const clientId = await resolveClientId(pageId);
+          const id       = `l_wh_${leadgenId}`;
+
+          await db.query(`
+            INSERT INTO leads (
+              id, leadgen_id, name, first_name, last_name,
+              phone, email, city, status, source,
+              client_id, campaign, ad_id, field_data
+            )
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'new','facebook',$9,$10,$11,$12)
+            ON CONFLICT (leadgen_id) DO NOTHING
+          `, [
+            id, leadgenId, name, firstName, lastName,
+            phone, email, city,
+            clientId, campaign, adId,
+            JSON.stringify(fieldData),
+          ]);
+
+          console.log(`Lead ingested: ${leadgenId} — ${name}`);
+        } catch (err) {
+          console.error(`Failed to process lead ${leadgenId}:`, err);
+        }
+      }
+    }
+
+    return res.status(200).send('EVENT_RECEIVED');
+  }
+
+  res.setHeader('Allow', ['GET', 'POST']);
+  res.status(405).end(`Method ${req.method} Not Allowed`);
+}

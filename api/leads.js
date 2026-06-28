@@ -53,6 +53,8 @@ export default async function handler(req, res) {
           assignedTo: r.assigned_to,
           createdAt: r.created_at,
           slaBreached: r.sla_breached,
+          convertedAt: r.converted_at,
+          conversionValue: r.conversion_value,
           initials
         };
       });
@@ -106,4 +108,17 @@ export default async function handler(req, res) {
         const lead = rows[0];
         const capiExtra = status === 'won'
           ? { currency: 'INR', value: lead.cpl || '0' }
- 
+          : {};
+        sendCapiEvent(STATUS_EVENT_MAP[status], lead, capiExtra).catch(() => null);
+      }
+
+      res.status(200).json(rows[0]);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'Failed to update lead' });
+    }
+  } else {
+    res.setHeader('Allow', ['GET', 'POST', 'PATCH']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}

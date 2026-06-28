@@ -131,7 +131,20 @@ LP.api = (() => {
     return res.json();
   }
 
-  return { getLeads, getClients, getStats, getAgents, addManualLead, updateLead, addActivity };
+  async function convertLead(id, data) {
+    const res = await fetch(`/api/leads/${id}/convert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to convert lead');
+    }
+    return res.json();
+  }
+
+  return { getLeads, getClients, getStats, getAgents, addManualLead, updateLead, addActivity, convertLead };
 })();
 
 // ─── GLOBAL DATA STORE ────────────────────────────────────
@@ -143,8 +156,10 @@ LP.data = {
   webhook: {
     url: 'https://fwl-crm.vercel.app/api/webhook',
     token: 'fwl-crm_secure_token_2026',
+    verifyToken: 'fwl-crm_secure_token_2026',
     status: 'active',
-    lastPing: new Date().toISOString()
+    lastPing: new Date().toISOString(),
+    totalReceived: 0,
   },
   auditLog: [],
 };
@@ -276,4 +291,52 @@ LP.theme = (() => {
     btn.title = isLight ? 'Switch to Dark mode' : 'Switch to Light mode';
   }
 
-  return { init, toggle, updateB
+  return { init, toggle, updateBtn };
+})();
+
+// ─── MOBILE SIDEBAR ───────────────────────────────────────
+function openMobileSidebar() {
+  const sb = document.getElementById('sidebar');
+  sb.classList.add('mobile-open');
+
+  const ov = document.createElement('div');
+  ov.id = 'mobile-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;backdrop-filter:blur(2px)';
+  ov.addEventListener('click', () => {
+    sb.classList.remove('mobile-open');
+    ov.remove();
+  });
+  document.body.appendChild(ov);
+}
+
+// ─── APP BOOTSTRAP (single DOMContentLoaded) ──────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // UI init
+  LP.theme.init();
+  LP.sidebar.init();
+  LP.toast.init();
+
+  // Topbar buttons
+  const themeBtn = document.getElementById('theme-toggle-btn');
+  if (themeBtn) {
+    LP.theme.updateBtn();
+    themeBtn.addEventListener('click', LP.theme.toggle);
+  }
+
+  const mobileBtn = document.getElementById('mobile-menu-btn');
+  if (mobileBtn) mobileBtn.addEventListener('click', openMobileSidebar);
+
+  // Router
+  LP.router.init();
+
+  // Global search
+  initGlobalSearch();
+
+  // Fetch data, then start polling
+  initGlobalData().then(initPolling);
+
+  // Welcome toast
+  setTimeout(() => {
+    LP.toast.success('FWL CRM ready', 'Live lead stream active · ap-southeast-1');
+  }, 1200);
+});

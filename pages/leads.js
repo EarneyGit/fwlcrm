@@ -12,7 +12,7 @@ LP.pages.leads = (() => {
   let currentClient = 'all';
   let streamUnsub   = null;
 
-  const statuses = ['all','new','contacted','qualified','won','lost','nurture'];
+  const statuses = ['all','new','contacted','qualified','converted','lost','nurture'];
 
   function timeAgo(isoStr) {
     const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
@@ -28,6 +28,9 @@ LP.pages.leads = (() => {
   }
 
   function statusBadge(status) {
+    if (status === 'converted') {
+      return `<span class="badge badge-won">Converted ✓</span>`;
+    }
     const label = status.charAt(0).toUpperCase() + status.slice(1);
     return `<span class="badge badge-${status}">${label}</span>`;
   }
@@ -79,7 +82,10 @@ LP.pages.leads = (() => {
           <div style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-2)">${lead.campaign}</div>
           <div style="font-size:11px;color:var(--text-3);margin-top:2px">${lead.clientName}</div>
         </td>
-        <td>${statusBadge(lead.status)}</td>
+        <td>
+          ${statusBadge(lead.status)}
+          ${lead.convertedAt ? `<div style="font-size:11px;color:var(--success);margin-top:2px;font-weight:600">₹${LP.utils.formatNumber(lead.conversionValue)}</div>` : ''}
+        </td>
         <td>
           ${(() => {
             const agentId = lead.assignedTo?.id || lead.assignedTo;
@@ -239,7 +245,7 @@ LP.pages.leads = (() => {
       if (val === 'newest') LP.data.leads.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
       if (val === 'oldest') LP.data.leads.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
       if (val === 'status') {
-        const order = ['new','contacted','qualified','won','lost','nurture'];
+        const order = ['new','contacted','qualified','converted','lost','nurture'];
         LP.data.leads.sort((a,b) => order.indexOf(a.status) - order.indexOf(b.status));
       }
       renderTable();
