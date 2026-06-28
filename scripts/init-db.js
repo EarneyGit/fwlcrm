@@ -14,6 +14,14 @@ const clients = [
   { id:'c5', name:'Kotak Mahindra Finance', industry:'BFSI', city:'Chennai', color:'#EF4444', icon:'🏦', accountId:'act_6677889900', forms:3, tokenDays:29, status:'connected', leadsToday:22, cpl:1200, convRate:2.1, totalLeads:3100, campaigns:5 },
 ];
 
+const agents = [
+  { id:'a1', name:'Arjun Rajan',    initials:'AR', color:'#1877F2', role:'Senior BDA',   email:'arjun@fwlagency.com',    status:'active' },
+  { id:'a2', name:'Meena Suresh',   initials:'MS', color:'#6C47FF', role:'BDA',           email:'meena@fwlagency.com',    status:'active' },
+  { id:'a3', name:'Kiran Pillai',   initials:'KP', color:'#10B981', role:'BDA',           email:'kiran@fwlagency.com',    status:'active' },
+  { id:'a4', name:'Divya Natarajan',initials:'DN', color:'#F59E0B', role:'Team Lead',     email:'divya@fwlagency.com',    status:'active' },
+  { id:'a5', name:'Senthil Kumar',  initials:'SK', color:'#EF4444', role:'BDA',           email:'senthil@fwlagency.com',  status:'active' },
+];
+
 const campaigns = [
   'Anna Nagar Premium Homes', 'OMR IT Corridor Apartments', 'NEET 2026 Coaching',
   'JEE Advanced Crash Course', 'Personal Loan Chennai', 'Health Insurance Q2',
@@ -61,6 +69,17 @@ async function initDB() {
       DROP TABLE IF EXISTS activities;
       DROP TABLE IF EXISTS leads;
       DROP TABLE IF EXISTS clients;
+      DROP TABLE IF EXISTS agents;
+
+      CREATE TABLE agents (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        initials VARCHAR(10),
+        color VARCHAR(20),
+        role VARCHAR(100),
+        email VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'active'
+      );
 
       CREATE TABLE clients (
         id VARCHAR(50) PRIMARY KEY,
@@ -115,27 +134,4 @@ async function initDB() {
     for (const c of clients) {
       await pool.query(`
         INSERT INTO clients (id, name, industry, city, color, icon, account_id, forms, token_days, status, leads_today, cpl, conv_rate, total_leads, campaigns)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-      `, [c.id, c.name, c.industry, c.city, c.color, c.icon, c.accountId, c.forms, c.tokenDays, c.status, c.leadsToday, c.cpl, c.convRate, c.totalLeads, c.campaigns]);
-    }
-    console.log("✅ Clients inserted.");
-
-    // Insert leads
-    const leads = generateLeads(50);
-    for (const l of leads) {
-      await pool.query(`
-        INSERT INTO leads (id, leadgen_id, name, first_name, last_name, phone, email, city, status, source, client_id, campaign, ad_id, created_at, sla_breached)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-      `, [l.id, l.leadgen_id, l.name, l.first_name, l.last_name, l.phone, l.email, l.city, l.status, l.source, l.client_id, l.campaign, l.ad_id, l.created_at, l.sla_breached]);
-    }
-    console.log("✅ 50 Mock Leads inserted.");
-
-    console.log("🎉 Database initialization complete!");
-  } catch (error) {
-    console.error("Error initializing DB:", error);
-  } finally {
-    pool.end();
-  }
-}
-
-initDB();
+        VALUES ($1, $2, $3, $4, $5, $6

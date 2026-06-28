@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — SPA Router & App Bootstrap
+// FWL CRM — SPA Router & App Bootstrap
 // Hash-based routing, page lifecycle, theme management
 // ============================================================
 
@@ -33,20 +33,17 @@ LP.router = (() => {
 
   function navigate(page) {
     if (!pageMap[page]) page = 'dashboard';
-    if (page === current && currentPageModule) return; // same page
+    if (page === current && currentPageModule) return;
 
-    // Destroy current page
     if (currentPageModule?.destroy) currentPageModule.destroy();
     currentPageModule = null;
 
     current = page;
     window.location.hash = page;
 
-    // Update topbar title
     const titleEl = document.getElementById('topbar-title');
     if (titleEl) titleEl.textContent = pageTitles[page] || page;
 
-    // Animate content out then in
     const content = document.getElementById('page-content');
     if (content) {
       content.style.opacity = '0';
@@ -65,11 +62,10 @@ LP.router = (() => {
       }, 120);
     }
 
-    document.title = `${pageTitles[page]} — FWL CRM CRM`;
+    document.title = `${pageTitles[page]} — FWL CRM`;
   }
 
   function init() {
-    // Read hash
     const hash = window.location.hash.replace('#', '') || 'dashboard';
     navigate(hash);
 
@@ -93,6 +89,18 @@ LP.api = (() => {
   async function getClients() {
     const res = await fetch('/api/clients');
     if (!res.ok) throw new Error('Failed to fetch clients');
+    return res.json();
+  }
+
+  async function getStats() {
+    const res = await fetch('/api/stats');
+    if (!res.ok) throw new Error('Failed to fetch stats');
+    return res.json();
+  }
+
+  async function getAgents() {
+    const res = await fetch('/api/agents');
+    if (!res.ok) throw new Error('Failed to fetch agents');
     return res.json();
   }
 
@@ -123,82 +131,119 @@ LP.api = (() => {
     return res.json();
   }
 
-  return { getLeads, getClients, addManualLead, updateLead, addActivity };
+  return { getLeads, getClients, getStats, getAgents, addManualLead, updateLead, addActivity };
 })();
 
-// Global data store loaded from API
-LP.data = { 
-  leads: [], 
+// ─── GLOBAL DATA STORE ────────────────────────────────────
+LP.data = {
+  leads: [],
   clients: [],
   stats: null,
+  agents: [],
   webhook: {
-    url: 'https://fwl-crm-crm.vercel.app/api/webhook',
+    url: 'https://fwl-crm.vercel.app/api/webhook',
     token: 'fwl-crm_secure_token_2026',
     status: 'active',
     lastPing: new Date().toISOString()
   },
   auditLog: [],
-  agents: []
 };
 
-// Polyfill LP.stream so legacy page components don't crash when calling .on()
+// LP.stream stub — keeps page components that call .on() from crashing.
+// Real-time updates are handled by the 15s poll in initPolling().
 LP.stream = {
-  on: (cb) => {
-    return () => {}; // return dummy unsubscribe function
-  }
+  on: () => () => {}, // returns a no-op unsubscribe
 };
 
-// Initialize global data
+// ─── GLOBAL DATA INIT ─────────────────────────────────────
 async function initGlobalData() {
   try {
-    const [clients, leads] = await Promise.all([
+    const [clients, leads, stats, agents] = await Promise.all([
       LP.api.getClients(),
-      LP.api.getLeads()
+      LP.api.getLeads(),
+      LP.api.getStats().catch(() => null),   // non-fatal if endpoint missing
+      LP.api.getAgents().catch(() => []),     // non-fatal if endpoint missing
     ]);
+
     LP.data.clients = clients;
-    LP.data.leads = leads.map(l => {
-      if (typeof l.assigned_to === 'string') {
-        l.assignedTo = LP.data.agents.find(a => a.id === l.assigned_to) || null;
+    LP.data.stats   = stats;
+    LP.data.agents  = agents;
+    LP.data.leads   = leads.map(l => {
+      if (l.assignedTo || typeof l.assigned_to === 'string') {
+        const agentId = l.assigned_to || l.assignedTo;
+        l.assignedTo = agents.find(a => a.id === agentId) || null;
       }
       return l;
     });
-    
-    // Refresh current page
+
+    // Re-render current page with fresh data
     const currentModule = LP.router.pageMap[LP.router.current];
     const content = document.getElementById('page-content');
     if (currentModule && content) {
       if (currentModule.renderTable) {
         currentModule.renderTable();
-      } else if (currentModule.init) {
+      } else {
         currentModule.init(content);
       }
     }
   } catch (err) {
-    console.error("Failed to load initial data", err);
+    console.error('Failed to load initial data:', err);
   }
 }
 
-// Fetch on load
-window.addEventListener('DOMContentLoaded', () => {
-  initGlobalData();
-  
-  // Basic polling simulation for real-time leads until WebSockets
+// ─── POLLING (real-time until WebSockets) ─────────────────
+function initPolling() {
   setInterval(async () => {
     try {
       const prevCount = LP.data.leads.length;
-      const leads = await LP.api.getLeads();
-      LP.data.leads = leads;
-      
+      const [leads, stats] = await Promise.all([
+        LP.api.getLeads(),
+        LP.api.getStats().catch(() => LP.data.stats),
+      ]);
+
+      LP.data.leads = leads.map(l => {
+        if (typeof l.assigned_to === 'string') {
+          l.assignedTo = LP.data.agents.find(a => a.id === l.assigned_to) || null;
+        }
+        return l;
+      });
+      LP.data.stats = stats;
+
       if (leads.length > prevCount) {
         LP.toast.info('New Lead', 'A new lead was received from Meta');
         LP.sidebar.updateBadge();
       }
-      
+
       const currentModule = LP.router.pageMap[LP.router.current];
-      if (currentModule && currentModule.renderTable) currentModule.renderTable();
-    } catch(e) {}
+      if (currentModule?.renderTable) currentModule.renderTable();
+    } catch (e) { /* silent — network blip */ }
   }, 15000);
-});
+}
+
+// ─── GLOBAL SEARCH ────────────────────────────────────────
+function initGlobalSearch() {
+  const input = document.getElementById('global-search');
+  if (!input) return;
+
+  let debounceTimer;
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      const q = input.value.trim().toLowerCase();
+      if (!q) return;
+
+      // Navigate to leads and apply filter
+      LP.router.navigate('leads');
+      setTimeout(() => {
+        const leadsSearchInput = document.getElementById('lead-search');
+        if (leadsSearchInput) {
+          leadsSearchInput.value = input.value.trim();
+          leadsSearchInput.dispatchEvent(new Event('input'));
+        }
+      }, 200);
+    }, 300);
+  });
+}
 
 // ─── THEME MANAGEMENT ─────────────────────────────────────
 LP.theme = (() => {
@@ -231,68 +276,4 @@ LP.theme = (() => {
     btn.title = isLight ? 'Switch to Dark mode' : 'Switch to Light mode';
   }
 
-  return { init, toggle, updateBtn };
-})();
-
-// ─── MOBILE SIDEBAR ───────────────────────────────────────
-function openMobileSidebar() {
-  const sb = document.getElementById('sidebar');
-  sb.classList.add('mobile-open');
-
-  // Overlay
-  const ov = document.createElement('div');
-  ov.id = 'mobile-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;backdrop-filter:blur(2px)';
-  ov.addEventListener('click', () => {
-    sb.classList.remove('mobile-open');
-    ov.remove();
-  });
-  document.body.appendChild(ov);
-}
-
-// ─── APP BOOTSTRAP ─────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  // Init theme
-  LP.theme.init();
-
-  // Init sidebar
-  LP.sidebar.init();
-
-  // Init toast
-  LP.toast.init();
-
-  // Wire topbar buttons
-  const themeBtn = document.getElementById('theme-toggle-btn');
-  if (themeBtn) {
-    LP.theme.updateBtn();
-    themeBtn.addEventListener('click', () => {
-      LP.theme.toggle();
-    });
-  }
-
-  const mobileBtn = document.getElementById('mobile-menu-btn');
-  if (mobileBtn) {
-    mobileBtn.addEventListener('click', openMobileSidebar);
-  }
-
-  // Init router (renders first page)
-  LP.router.init();
-
-  // Start live lead stream
-  LP.stream.start();
-
-  // Welcome toast after brief delay
-  setTimeout(() => {
-    LP.toast.success('FWL CRM CRM ready', 'Live lead stream active · Mumbai (ap-south-1)');
-  }, 1200);
-
-  // Demo: first fake lead after 8s to show real-time
-  setTimeout(() => {
-    LP.toast.show({
-      type: 'lead',
-      title: 'New Lead — Priya Krishnan',
-      body: '📸 Instagram · Prestige Builders · Anna Nagar Premium Homes · +91 98765 XXXXX',
-      duration: 7000,
-    });
-  }, 8000);
-});
+  return { init, toggle, updateB

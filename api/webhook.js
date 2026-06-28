@@ -1,89 +1,93 @@
 const db = require('./_db');
 const crypto = require('crypto');
 
-// The App Secret from Meta App Dashboard
-const APP_SECRET = process.env.META_APP_SECRET || 'dummy_secret_for_demo';
+const APP_SECRET         = process.env.META_APP_SECRET         || '';
+const VERIFY_TOKEN       = process.env.WEBHOOK_VERIFY_TOKEN    || 'fwl-crm_secure_token_2026';
+const PAGE_ACCESS_TOKEN  = process.env.META_PAGE_ACCESS_TOKEN  || '';
 
-export default async function handler(req, res) {
-  // 1. Webhook Verification (GET request from Meta)
-  if (req.method === 'GET') {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
+// ─── Signature verification ───────────────────────────────
+function verifySignature(rawBody, signatureHeader) {
+  if (!APP_SECRET) return true; // skip in dev if secret not configured
+  if (!signatureHeader) return false;
 
-    // Verify token matches what you set in Meta App Dashboard
-    if (mode === 'subscribe' && token === 'fwl-crm_secure_token_2026') {
-      console.log('Webhook verified');
-      res.status(200).send(challenge);
-    } else {
-      res.status(403).json({ error: 'Verification failed' });
-    }
-  } 
-  
-  // 2. Webhook Payload (POST request from Meta)
-  else if (req.method === 'POST') {
-    try {
-      const body = req.body;
+  const [algo, digest] = signatureHeader.split('=');
+  if (algo !== 'sha256') return false;
 
-      if (body.object !== 'page') {
-        res.status(404).end();
-        return;
-      }
+  const expected = crypto
+    .createHmac('sha256', APP_SECRET)
+    .update(rawBody)
+    .digest('hex');
 
-      // Process each entry
-      for (const entry of body.entry) {
-        for (const change of entry.changes) {
-          if (change.field === 'leadgen') {
-            const leadData = change.value;
-            
-            // In a real scenario, you use the leadgen_id to make a Graph API call 
-            // to fetch the actual lead details using a Page Access Token.
-            // For this demo, we mock the fetched data payload.
-            
-            const mockExtractedData = {
-              id: 'l_webhook_' + leadData.leadgen_id,
-              leadgenId: leadData.leadgen_id,
-              name: 'Meta Webhook Lead',
-              firstName: 'Meta',
-              lastName: 'Lead',
-              phone: '+919876500000',
-              email: 'webhook@example.com',
-              city: 'Chennai',
-              clientId: 'c1', // Mocked matching
-              campaign: 'Meta Ads Webhook Test'
-            };
-
-            const insertQuery = `
-              INSERT INTO leads (id, leadgen_id, name, first_name, last_name, phone, email, city, status, source, client_id, campaign)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'new', 'facebook', $9, $10)
-              ON CONFLICT (leadgen_id) DO NOTHING
-            `;
-
-            await db.query(insertQuery, [
-              mockExtractedData.id,
-              mockExtractedData.leadgenId,
-              mockExtractedData.name,
-              mockExtractedData.firstName,
-              mockExtractedData.lastName,
-              mockExtractedData.phone,
-              mockExtractedData.email,
-              mockExtractedData.city,
-              mockExtractedData.clientId,
-              mockExtractedData.campaign
-            ]);
-            
-            console.log('Lead ingested from Meta webhook:', leadData.leadgen_id);
-          }
-        }
-      }
-
-      res.status(200).send('EVENT_RECEIVED');
-    } catch (error) {
-      console.error('Webhook error:', error);
-      res.status(500).end();
-    }
-  } else {
-    res.setHeader('Allow', ['GET', 'POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(digest,   'hex'),
+      Buffer.from(expected, 'hex')
+    );
+  } catch {
+    return false;
   }
 }
+
+// ─── Fetch real lead details from Meta Graph API ──────────
+async function fetchLeadFromMeta(leadgenId) {
+  if (!PAGE_ACCESS_TOKEN) {
+    console.warn('META_PAGE_ACCESS_TOKEN not set — lead data will be incomplete');
+    return null;
+  }
+
+  const fields = 'field_data,created_time,ad_id,campaign_id,form_id,page_id';
+  const url = `https://graph.facebook.com/v19.0/${leadgenId}?fields=${fields}&access_token=${PAGE_ACCESS_TOKEN}`;
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const err = await response.text();
+    console.error('Meta Graph API error:', err);
+    return null;
+  }
+  return response.json();
+}
+
+// Convert Graph API field_data array to contact fields + raw map
+function parseLeadFields(fieldDataArr) {
+  const map = {};
+  for (const { name, values } of (fieldDataArr || [])) {
+    map[name] = values?.[0] || '';
+  }
+
+  const fullName = map['full_name'] || '';
+  const parts    = fullName.split(' ');
+
+  return {
+    firstName: map['first_name'] || parts[0] || 'Meta',
+    lastName:  map['last_name']  || parts.slice(1).join(' ') || 'Lead',
+    phone:     map['phone_number'] || map['phone'] || '',
+    email:     map['email'] || '',
+    city:      map['city']  || map['location'] || '',
+    fieldData: map,
+  };
+}
+
+// Match Meta page_id to a client row in the DB
+async function resolveClientId(pageId) {
+  try {
+    const { rows } = await db.query(
+      'SELECT id FROM clients WHERE account_id = $1 LIMIT 1',
+      [String(pageId)]
+    );
+    if (rows.length) return rows[0].id;
+  } catch (_) {}
+  return 'c1'; // fallback to first client
+}
+
+export default async function handler(req, res) {
+  // ── Webhook Verification (GET from Meta) ─────────────────
+  if (req.method === 'GET') {
+    const mode      = req.query['hub.mode'];
+    const token     = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+      console.log('Webhook verified');
+      return res.status(200).send(challenge);
+    }
+    return res.status(403).json({
