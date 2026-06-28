@@ -8,7 +8,6 @@ LP.pages = LP.pages || {};
 
 LP.pages.settings = (() => {
   let currentLang = localStorage.getItem('lp_lang') || 'en';
-  let currentLang = localStorage.getItem('lp_lang') || 'en';
 
   function formatTs(isoStr) {
     return new Date(isoStr).toLocaleString('en-IN', {
