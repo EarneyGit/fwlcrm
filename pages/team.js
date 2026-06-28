@@ -192,25 +192,58 @@ LP.pages.team = (() => {
     const overlay = document.createElement('div');
     overlay.className = 'modal-overlay';
     overlay.innerHTML = `
-      <div class="modal-content" style="max-width:400px">
-        <h2 style="margin-top:0">Add New Agent</h2>
+      <div class="modal" style="max-width:400px;background:var(--surface-1);border:1px solid var(--border-3);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);transform:scale(0.95);opacity:0;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);position:relative">
         
-        <label class="form-label">Name</label>
-        <input type="text" id="new-agent-name" class="form-input" placeholder="e.g. Rahul Sharma" style="margin-bottom:12px">
-        
-        <label class="form-label">Role</label>
-        <select id="new-agent-role" class="form-select" style="margin-bottom:12px">
-          <option value="Sales Rep">Sales Rep</option>
-          <option value="Support Agent">Support Agent</option>
-          <option value="Account Manager">Account Manager</option>
-        </select>
+        <div style="padding:24px 24px 16px 24px;border-bottom:1px solid var(--border-0)">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <h2 style="margin:0;font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px">
+              <span style="color:var(--accent)">${LP.icons.get('user-plus', 'icon-md')}</span>
+              Invite Team Member
+            </h2>
+            <button class="btn btn-ghost btn-sm" id="agent-close-x" style="padding:4px;color:var(--text-3)">${LP.icons.get('x-circle', 'icon-md')}</button>
+          </div>
+          <p style="margin:6px 0 0 0;font-size:13px;color:var(--text-2)">Add a new agent to your LeadPulse workspace to start assigning leads.</p>
+        </div>
 
-        <label class="form-label">Color (for avatar)</label>
-        <input type="color" id="new-agent-color" class="form-input" value="#3b82f6" style="margin-bottom:20px;padding:4px;height:40px">
+        <div style="padding:24px">
+          <div style="margin-bottom:20px">
+            <label class="form-label" style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-3);margin-bottom:8px">Full Name</label>
+            <div style="position:relative">
+              <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3)">
+                ${LP.icons.get('user', 'icon-sm')}
+              </div>
+              <input type="text" id="new-agent-name" class="form-input" placeholder="e.g. Rahul Sharma" style="padding-left:36px;height:44px">
+            </div>
+          </div>
+          
+          <div style="margin-bottom:20px">
+            <label class="form-label" style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-3);margin-bottom:8px">Role</label>
+            <div style="position:relative">
+              <div style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-3)">
+                ${LP.icons.get('briefcase', 'icon-sm')}
+              </div>
+              <select id="new-agent-role" class="form-select" style="padding-left:36px;height:44px">
+                <option value="Sales Rep">Sales Rep</option>
+                <option value="Support Agent">Support Agent</option>
+                <option value="Account Manager">Account Manager</option>
+              </select>
+            </div>
+          </div>
 
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="btn btn-ghost" id="agent-cancel-btn">Cancel</button>
-          <button class="btn btn-primary" id="agent-save-btn">Save Agent</button>
+          <div style="margin-bottom:24px">
+            <label class="form-label" style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-3);margin-bottom:8px">Avatar Accent Color</label>
+            <div style="display:flex;align-items:center;gap:12px">
+              <input type="color" id="new-agent-color" value="#06B6D4" style="width:44px;height:44px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0">
+              <span style="font-size:12px;color:var(--text-2)">This color will be used for the agent's profile ring.</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:32px">
+            <button class="btn btn-ghost" id="agent-cancel-btn" style="flex:1">Cancel</button>
+            <button class="btn btn-primary" id="agent-save-btn" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px">
+              ${LP.icons.get('mail', 'icon-sm')} Send Invite
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -218,13 +251,20 @@ LP.pages.team = (() => {
     document.body.appendChild(overlay);
 
     // Make it visible
-    requestAnimationFrame(() => overlay.classList.add('open'));
+    requestAnimationFrame(() => {
+      overlay.querySelector('.modal').style.transform = 'scale(1)';
+      overlay.querySelector('.modal').style.opacity = '1';
+      overlay.classList.add('open');
+    });
 
     const close = () => {
+      overlay.querySelector('.modal').style.transform = 'scale(0.95)';
+      overlay.querySelector('.modal').style.opacity = '0';
       overlay.classList.remove('open');
-      setTimeout(() => overlay.remove(), 250);
+      setTimeout(() => overlay.remove(), 300);
     };
 
+    overlay.querySelector('#agent-close-x').addEventListener('click', close);
     overlay.querySelector('#agent-cancel-btn').addEventListener('click', close);
 
     overlay.querySelector('#agent-save-btn').addEventListener('click', () => {
