@@ -12,7 +12,7 @@ export default async function handler(req, res) {
     const challenge = req.query['hub.challenge'];
 
     // Verify token matches what you set in Meta App Dashboard
-    if (mode === 'subscribe' && token === 'leadpulse_secure_token_2026') {
+    if (mode === 'subscribe' && token === 'fwl-crm_secure_token_2026') {
       console.log('Webhook verified');
       res.status(200).send(challenge);
     } else {

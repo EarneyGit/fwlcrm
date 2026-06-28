@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Settings Page
+// FWL CRM CRM — Settings Page
 // Agency profile, billing plans, language toggle, audit log
 // ============================================================
 
@@ -53,7 +53,7 @@ LP.pages.settings = (() => {
           </div>
           <div class="form-group">
             <label class="form-label">Agency Name</label>
-            <input class="form-input" value="LeadPulse Performance Agency" id="ag-name">
+            <input class="form-input" value="FWL CRM Performance Agency" id="ag-name">
           </div>
           <div class="form-group">
             <label class="form-label">GST Number (GSTIN)</label>
@@ -65,7 +65,7 @@ LP.pages.settings = (() => {
           </div>
           <div class="form-group">
             <label class="form-label">Contact Email</label>
-            <input class="form-input" value="agency@leadpulse.in" id="ag-email">
+            <input class="form-input" value="agency@fwl-crm.in" id="ag-email">
           </div>
           <div class="form-group">
             <label class="form-label">WhatsApp Business Number</label>

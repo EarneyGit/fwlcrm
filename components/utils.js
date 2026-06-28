@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Utilities
+// FWL CRM CRM — Utilities
 // Safe formatting and shared helpers
 // ============================================================
 

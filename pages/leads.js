@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Leads Inbox Page
+// FWL CRM CRM — Leads Inbox Page
 // Gmail-style table with filters, search, and drawer
 // ============================================================
 
@@ -265,7 +265,7 @@ LP.pages.leads = (() => {
       const blob = new Blob([csv], { type: 'text/csv' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
-      a.href = url; a.download = `leadpulse_leads_${Date.now()}.csv`;
+      a.href = url; a.download = `fwl-crm_leads_${Date.now()}.csv`;
       a.click(); URL.revokeObjectURL(url);
       LP.toast.success('CSV exported!', `${leads.length} leads downloaded`);
     });

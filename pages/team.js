@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Team Management Page
+// FWL CRM CRM — Team Management Page
 // Agent assignment and activity tracking
 // ============================================================
 
@@ -204,7 +204,7 @@ LP.pages.team = (() => {
             </h2>
             <button class="btn btn-ghost btn-sm" id="agent-close-x" style="padding:4px;color:var(--text-3)">${LP.icons.get('x-circle', 'icon-md')}</button>
           </div>
-          <p style="margin:6px 0 0 0;font-size:13px;color:var(--text-2)">Add a new agent to your LeadPulse workspace to start assigning leads.</p>
+          <p style="margin:6px 0 0 0;font-size:13px;color:var(--text-2)">Add a new agent to your FWL CRM workspace to start assigning leads.</p>
         </div>
 
         <div style="padding:24px">

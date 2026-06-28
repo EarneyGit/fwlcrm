@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — SPA Router & App Bootstrap
+// FWL CRM CRM — SPA Router & App Bootstrap
 // Hash-based routing, page lifecycle, theme management
 // ============================================================
 
@@ -65,7 +65,7 @@ LP.router = (() => {
       }, 120);
     }
 
-    document.title = `${pageTitles[page]} — LeadPulse CRM`;
+    document.title = `${pageTitles[page]} — FWL CRM CRM`;
   }
 
   function init() {
@@ -130,28 +130,15 @@ LP.api = (() => {
 LP.data = { 
   leads: [], 
   clients: [],
-  stats: {
-    leadsToday: 42,
-    leadsYesterday: 28,
-    avgCPL: '₹240',
-    avgResponse: '4m 12s',
-    responseYesterday: '15m'
-  },
+  stats: null,
   webhook: {
-    url: 'https://leadpulse-crm.vercel.app/api/webhook',
-    token: 'leadpulse_secure_token_2026',
+    url: 'https://fwl-crm-crm.vercel.app/api/webhook',
+    token: 'fwl-crm_secure_token_2026',
     status: 'active',
     lastPing: new Date().toISOString()
   },
-  auditLog: [
-    { type: 'login', text: 'Agency Owner logged in', ts: new Date().toISOString() },
-    { type: 'settings', text: 'CAPI tracking enabled for Prestige Builders', ts: new Date(Date.now() - 3600000).toISOString() },
-    { type: 'export', text: 'Exported leads for Sri Balaji Hospitals', ts: new Date(Date.now() - 7200000).toISOString() }
-  ],
-  agents: [
-    { id: 'ag1', name: 'Ravi Sales', role: 'Sales Rep', initials: 'RS', color: '#10b981' },
-    { id: 'ag2', name: 'Sneha Support', role: 'Support Agent', initials: 'SS', color: '#8b5cf6' }
-  ]
+  auditLog: [],
+  agents: []
 };
 
 // Polyfill LP.stream so legacy page components don't crash when calling .on()
@@ -296,7 +283,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Welcome toast after brief delay
   setTimeout(() => {
-    LP.toast.success('LeadPulse CRM ready', 'Live lead stream active · Mumbai (ap-south-1)');
+    LP.toast.success('FWL CRM CRM ready', 'Live lead stream active · Mumbai (ap-south-1)');
   }, 1200);
 
   // Demo: first fake lead after 8s to show real-time

@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Dashboard Page
+// FWL CRM CRM — Dashboard Page
 // KPIs, live feed, SLA alerts, source breakdown
 // ============================================================
 

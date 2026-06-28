@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Sidebar Component
+// FWL CRM CRM — Sidebar Component
 // ============================================================
 
 window.LP = window.LP || {};
@@ -39,7 +39,7 @@ LP.sidebar = (() => {
           ${get('activity', 'icon-md')}
         </div>
         <div class="sidebar-logo-text">
-          <strong>LeadPulse</strong>
+          <strong>FWL CRM</strong>
           <span>PERFORMANCE CRM</span>
         </div>
         <button class="sidebar-toggle" id="sidebar-toggle-btn" title="Toggle sidebar">

@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Clients Page
+// FWL CRM CRM — Clients Page
 // Multi-tenant client grid with token health indicators
 // ============================================================
 
@@ -95,7 +95,7 @@ LP.pages.clients = (() => {
     overlay.innerHTML = `
       <div class="modal">
         <div class="modal-title">Add New Client</div>
-        <div class="modal-subtitle">Connect a new client's Meta Ad Account to LeadPulse</div>
+        <div class="modal-subtitle">Connect a new client's Meta Ad Account to FWL CRM</div>
 
         <div class="form-group">
           <label class="form-label">Business Name</label>

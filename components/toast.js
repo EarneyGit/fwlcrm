@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Toast Notification System
+// FWL CRM CRM — Toast Notification System
 // ============================================================
 
 window.LP = window.LP || {};

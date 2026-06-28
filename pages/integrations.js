@@ -1,5 +1,5 @@
 // ============================================================
-// LeadPulse CRM — Integrations Page
+// FWL CRM CRM — Integrations Page
 // Meta OAuth, Webhook config, CAPI toggles
 // ============================================================
 
