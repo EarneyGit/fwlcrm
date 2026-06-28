@@ -5,8 +5,23 @@ const APP_SECRET         = process.env.META_APP_SECRET         || '';
 const VERIFY_TOKEN       = process.env.WEBHOOK_VERIFY_TOKEN    || 'fwl-crm_secure_token_2026';
 const PAGE_ACCESS_TOKEN  = process.env.META_PAGE_ACCESS_TOKEN  || '';
 
+// Disable Next.js body parser so we can read raw bytes for HMAC verification
+export const config = {
+  api: { bodyParser: false },
+};
+
+// Read the full raw body from the request stream
+function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', chunk => chunks.push(chunk));
+    req.on('end',  () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 // ─── Signature verification ───────────────────────────────
-function verifySignature(rawBody, signatureHeader) {
+function verifySignature(rawBodyBuffer, signatureHeader) {
   if (!APP_SECRET) return true; // skip in dev if secret not configured
   if (!signatureHeader) return false;
 
@@ -15,7 +30,7 @@ function verifySignature(rawBody, signatureHeader) {
 
   const expected = crypto
     .createHmac('sha256', APP_SECRET)
-    .update(rawBody)
+    .update(rawBodyBuffer)
     .digest('hex');
 
   try {
@@ -80,14 +95,4 @@ async function resolveClientId(pageId) {
 }
 
 export default async function handler(req, res) {
-  // ── Webhook Verification (GET from Meta) ─────────────────
-  if (req.method === 'GET') {
-    const mode      = req.query['hub.mode'];
-    const token     = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      console.log('Webhook verified');
-      return res.status(200).send(challenge);
-    }
-    return res.status(403).json({
+  // ── Webhook Verif
