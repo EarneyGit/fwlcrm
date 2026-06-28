@@ -8,7 +8,7 @@ LP.pages = LP.pages || {};
 
 LP.pages.settings = (() => {
   let currentLang = localStorage.getItem('lp_lang') || 'en';
-  let currentPlan = localStorage.getItem('lp_plan') || 'pro';
+  let currentLang = localStorage.getItem('lp_lang') || 'en';
 
   function formatTs(isoStr) {
     return new Date(isoStr).toLocaleString('en-IN', {
@@ -16,14 +16,7 @@ LP.pages.settings = (() => {
     });
   }
 
-  function selectPlan(plan) {
-    currentPlan = plan;
-    localStorage.setItem('lp_plan', plan);
-    document.querySelectorAll('.plan-card').forEach(c => {
-      c.classList.toggle('active', c.dataset.plan === plan);
-    });
-    LP.toast.success('Plan selected!', plan === 'starter' ? 'Starter ₹4,999/mo' : 'Pro ₹14,999/mo');
-  }
+
 
   function toggleLang() {
     currentLang = currentLang === 'en' ? 'ta' : 'en';
@@ -38,7 +31,7 @@ LP.pages.settings = (() => {
     );
   }
 
-  window.selectPlan = selectPlan;
+
   window.settingsToggleLang = toggleLang;
 
   function render() {
@@ -46,7 +39,7 @@ LP.pages.settings = (() => {
       <div class="page-header">
         <div>
           <h1 class="page-title">Settings</h1>
-          <div class="page-subtitle">Agency profile, billing, and compliance configuration</div>
+          <div class="page-subtitle">Agency profile, notifications, and compliance configuration</div>
         </div>
         <button class="btn btn-primary" onclick="LP.toast.success('Settings saved!','All changes applied successfully')">
           Save Changes
@@ -138,64 +131,6 @@ LP.pages.settings = (() => {
         </div>
       </div>
 
-      <!-- Billing Plans -->
-      <div class="card" style="margin-bottom:24px">
-        <div class="card-header">
-          <div>
-            <div class="card-title">Billing Plans</div>
-            <div class="card-subtitle">GST 18% applicable · Razorpay UPI/Card · HSN 998314</div>
-          </div>
-          <span class="badge badge-success">₹ INR Billing</span>
-        </div>
-        <div class="grid-2">
-          <div class="plan-card ${currentPlan === 'starter' ? 'active' : ''}" data-plan="starter" onclick="selectPlan('starter')">
-            <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;letter-spacing:0.08em">Starter</div>
-            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
-              <div class="plan-price">₹4,999</div>
-              <div class="plan-period">/month</div>
-            </div>
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:16px">₹5,898/mo incl. 18% GST</div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              ${[
-                'Up to 5 clients',
-                '500 leads/month',
-                'Meta webhook + Graph API',
-                'WhatsApp Cloud API',
-                'Basic analytics',
-                'Email support',
-              ].map(f => `<div class="plan-feature"><span class="check" style="display:flex;align-items:center;color:var(--success)">${LP.icons.get('check', 'icon-sm')}</span>${f}</div>`).join('')}
-            </div>
-            <button class="btn btn-secondary" style="width:100%;margin-top:16px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:4px">
-              ${currentPlan === 'starter' ? LP.icons.get('check', 'icon-sm') + ' Current Plan' : 'Select Starter'}
-            </button>
-          </div>
-
-          <div class="plan-card popular ${currentPlan === 'pro' ? 'active' : ''}" data-plan="pro" onclick="selectPlan('pro')">
-            <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--meta);margin-bottom:12px;letter-spacing:0.08em">Pro Agency</div>
-            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
-              <div class="plan-price" style="background:linear-gradient(90deg,var(--meta),var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">₹14,999</div>
-              <div class="plan-period">/month</div>
-            </div>
-            <div style="font-size:11px;color:var(--text-3);margin-bottom:16px">₹17,698/mo incl. 18% GST</div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              ${[
-                'Unlimited clients',
-                'Unlimited leads',
-                'Real-time webhook + CAPI',
-                'WhatsApp + Exotel + IVR',
-                'Zoho / HubSpot sync',
-                'Tamil UI + Multi-language',
-                'SLA alerts + Audit log',
-                'Priority support (Chennai)',
-                'Custom domain',
-              ].map(f => `<div class="plan-feature"><span class="check" style="display:flex;align-items:center;color:var(--success)">${LP.icons.get('check', 'icon-sm')}</span>${f}</div>`).join('')}
-            </div>
-            <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:4px">
-              ${currentPlan === 'pro' ? LP.icons.get('check', 'icon-sm') + ' Current Plan' : 'Upgrade to Pro →'}
-            </button>
-          </div>
-        </div>
-      </div>
 
       <!-- India Compliance -->
       <div class="card" style="margin-bottom:24px">
