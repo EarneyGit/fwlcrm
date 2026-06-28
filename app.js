@@ -149,8 +149,8 @@ LP.data = {
     { type: 'export', text: 'Exported leads for Sri Balaji Hospitals', ts: new Date(Date.now() - 7200000).toISOString() }
   ],
   agents: [
-    { id: 'ag1', name: 'Ravi Sales', role: 'Sales Rep', initials: 'RS', color: '#10b981', avatar: 'https://i.pravatar.cc/150?u=ag1' },
-    { id: 'ag2', name: 'Sneha Support', role: 'Support Agent', initials: 'SS', color: '#8b5cf6', avatar: 'https://i.pravatar.cc/150?u=ag2' }
+    { id: 'ag1', name: 'Ravi Sales', role: 'Sales Rep', initials: 'RS', color: '#10b981' },
+    { id: 'ag2', name: 'Sneha Support', role: 'Support Agent', initials: 'SS', color: '#8b5cf6' }
   ]
 };
 

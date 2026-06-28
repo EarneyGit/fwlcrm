@@ -40,7 +40,9 @@ LP.pages.team = (() => {
       const count = getAgentLeads(a.id).length;
       return `
         <div class="agent-card ${isSelected ? 'active' : ''}" data-id="${a.id}" style="padding:12px;border:1px solid ${isSelected ? 'var(--primary)' : 'var(--border)'};border-radius:8px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;background:${isSelected ? 'rgba(6,182,212,0.05)' : '#fff'}">
-          <img src="${a.avatar}" alt="${a.name}" style="width:40px;height:40px;border-radius:50%">
+          <div style="width:40px;height:40px;border-radius:50%;background:${a.color}22;color:${a.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid ${a.color}44">
+            ${LP.icons.get('user', 'icon-md')}
+          </div>
           <div style="flex:1">
             <div style="font-weight:600;font-size:14px">${a.name}</div>
             <div style="font-size:12px;color:var(--text-3)">${count} assigned lead${count !== 1 ? 's' : ''}</div>
@@ -282,8 +284,7 @@ LP.pages.team = (() => {
         name,
         role,
         initials,
-        color,
-        avatar: `https://i.pravatar.cc/150?u=${id}`
+        color
       });
 
       LP.toast.success('Agent Added', `${name} has been added to the team`);

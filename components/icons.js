@@ -54,8 +54,8 @@ LP.icons = (() => {
   function get(name, className = '') {
     const paths = svgs[name];
     if (!paths) {
-      console.warn(`Icon "\${name}" not found in LP.icons registry.`);
-      return `<span class="icon \${className}" style="display:inline-block;width:1em;height:1em;background:#e2e8f0;border-radius:2px"></span>`;
+      console.warn(`Icon "${name}" not found in LP.icons registry.`);
+      return `<span class="icon ${className}" style="display:inline-block;width:1em;height:1em;background:#e2e8f0;border-radius:2px"></span>`;
     }
 
     return `
@@ -64,9 +64,9 @@ LP.icons = (() => {
         width="24" height="24" viewBox="0 0 24 24" 
         fill="none" stroke="currentColor" stroke-width="2" 
         stroke-linecap="round" stroke-linejoin="round" 
-        class="icon-svg \${className}"
+        class="icon-svg ${className}"
       >
-        \${paths}
+        ${paths}
       </svg>
     `;
   }
