@@ -217,8 +217,8 @@ function initPolling() {
       ]);
 
       LP.data.leads = leads.map(l => {
-        if (typeof l.assigned_to === 'string') {
-          l.assignedTo = LP.data.agents.find(a => a.id === l.assigned_to) || null;
+        if (typeof l.assignedTo === 'string') {
+          l.assignedTo = LP.data.agents.find(a => a.id === l.assignedTo) || null;
         }
         return l;
       });

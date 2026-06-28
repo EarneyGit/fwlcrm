@@ -32,7 +32,9 @@ LP.drawer = (() => {
 
   function statusBadge(status) {
     if (!status) return '';
-    return `<span class="badge badge-${status}">${status.charAt(0).toUpperCase() + status.slice(1)}</span>`;
+    const cssClass = status === 'converted' ? 'won' : status;
+    const label = status === 'converted' ? 'Converted ✓' : status.charAt(0).toUpperCase() + status.slice(1);
+    return `<span class="badge badge-${cssClass}">${label}</span>`;
   }
 
   function renderActivities(activities) {
@@ -261,6 +263,57 @@ LP.drawer = (() => {
         document.querySelectorAll('#status-opts .status-opt').forEach(b => {
           b.className = `status-opt${b.dataset.status === newStatus ? ` active-${newStatus}` : ''}`;
         });
+
+        if (newStatus === 'converted') {
+          const valueStr = window.prompt(`Enter deal amount in ₹ for ${lead.name}:`);
+          if (valueStr === null) {
+            lead.status = oldStatus;
+            document.querySelectorAll('#status-opts .status-opt').forEach(b => { b.className = `status-opt${b.dataset.status === oldStatus ? ` active-${oldStatus}` : ''}`; });
+            return;
+          }
+          const value = parseFloat(valueStr.replace(/[^0-9.]/g, ''));
+          if (!value || isNaN(value)) {
+            LP.toast.warning('Invalid amount', 'Please enter a valid number');
+            lead.status = oldStatus;
+            document.querySelectorAll('#status-opts .status-opt').forEach(b => { b.className = `status-opt${b.dataset.status === oldStatus ? ` active-${oldStatus}` : ''}`; });
+            return;
+          }
+          const contentName = window.prompt('Service name (e.g. "Business Consulting Package"):') || 'Service';
+
+          try {
+            const res = await fetch(`/api/leads/${lead.id}/convert`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ value, content_name: contentName }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to mark converted');
+            
+            LP.data.leads = await LP.api.getLeads();
+            const updatedLead = LP.data.leads.find(l => l.id === lead.id);
+            if (updatedLead) {
+              document.getElementById('activity-log').innerHTML = renderActivities(updatedLead.activities);
+              lead.activities = updatedLead.activities;
+              lead.convertedAt = updatedLead.convertedAt;
+              lead.conversionValue = updatedLead.conversionValue;
+            }
+            
+            LP.sidebar.updateBadge();
+            LP.toast.success(`₹${value.toLocaleString('en-IN')} Purchase event sent to Meta!`, `${lead.name} marked converted`);
+            
+            const mod = LP.router.pageMap[LP.router.current];
+            if (mod && mod.init) mod.init(document.getElementById('page-content'));
+
+            const cbtn = document.getElementById('convert-lead-btn');
+            if (cbtn) cbtn.remove();
+            return;
+          } catch (err) {
+            LP.toast.warning('Network error', err.message);
+            lead.status = oldStatus;
+            document.querySelectorAll('#status-opts .status-opt').forEach(b => { b.className = `status-opt${b.dataset.status === oldStatus ? ` active-${oldStatus}` : ''}`; });
+            return;
+          }
+        }
 
         try {
           await LP.api.updateLead(lead.id, { status: newStatus });

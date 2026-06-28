@@ -19,7 +19,7 @@ function sha256(value) {
 const STATUS_EVENT_MAP = {
   contacted: 'Contact',
   qualified:  'Schedule',    // site visit / consultation booked
-  won:        'Purchase',    // deal closed
+  converted:  'Purchase',    // deal closed
   new:        'Lead',        // new lead arrived
 };
 
