@@ -249,29 +249,12 @@ img { max-width: 100%; display: block; }
   flex-shrink: 0;
 }
 
-.sidebar-logo-text {
+.brand-logo {
   overflow: hidden;
   transition: opacity var(--duration-base) var(--ease-out), width var(--duration-slow) var(--ease);
-  white-space: nowrap;
 }
 
-.sidebar-logo-text strong {
-  display: block;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.2px;
-  color: var(--text-1);
-}
-
-.sidebar-logo-text span {
-  font-size: 9.5px;
-  color: var(--text-3);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-weight: 500;
-}
-
-#sidebar.collapsed .sidebar-logo-text { opacity: 0; width: 0; }
+#sidebar.collapsed .brand-logo { opacity: 0; width: 0; }
 
 /* Section labels */
 .sidebar-section-label {
@@ -1929,3 +1912,10 @@ img { max-width: 100%; display: block; }
 @media (max-width: 400px) {
   .kpi-grid { grid-template-columns: 1fr; }
 }
+
+/* Light mode logo handling */
+.dark-mode-logo { display: block !important; }
+.light-mode-logo { display: none !important; }
+
+[data-theme="light"] .dark-mode-logo { display: none !important; }
+[data-theme="light"] .light-mode-logo { display: block !important; }

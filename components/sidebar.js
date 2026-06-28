@@ -35,13 +35,8 @@ LP.sidebar = (() => {
 
     return `
       <div class="sidebar-logo">
-        <div class="sidebar-logo-icon">
-          ${get('activity', 'icon-md')}
-        </div>
-        <div class="sidebar-logo-text">
-          <strong>FWL CRM</strong>
-          <span>PERFORMANCE CRM</span>
-        </div>
+        <img src="/logo-white.png" class="brand-logo dark-mode-logo" alt="FWL CRM" style="height:28px; transition:opacity 0.2s; max-width: 150px; object-fit: contain;">
+        <img src="/logo-black.png" class="brand-logo light-mode-logo" alt="FWL CRM" style="height:28px; display:none; transition:opacity 0.2s; max-width: 150px; object-fit: contain;">
         <button class="sidebar-toggle" id="sidebar-toggle-btn" title="Toggle sidebar">
           ${get(collapsed ? 'chevron-right' : 'chevron-left', 'icon-sm')}
         </button>
