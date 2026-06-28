@@ -216,7 +216,7 @@ img { max-width: 100%; display: block; }
   transition:
     width var(--duration-slow) var(--ease),
     transform var(--duration-slow) var(--ease);
-  overflow: hidden;
+  overflow: visible;
 }
 
 #sidebar.collapsed { width: var(--sidebar-collapsed); }
