@@ -206,7 +206,7 @@ LP.drawer = (() => {
       <div class="drawer-actions">
         ${lead.status !== 'converted' ? `
         <button class="btn btn-primary" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" id="convert-lead-btn">
-          ${get('check-circle', 'icon-sm') || '✓'} Mark Converted
+          ${get('check-circle-2', 'icon-sm')} Mark Converted
         </button>
         ` : ''}
         <button class="btn btn-secondary" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px" id="capi-push-btn">
@@ -467,79 +467,12 @@ LP.drawer = (() => {
       }
     });
 
-    // Convert Lead
-    document.getElementById('convert-lead-btn')?.addEventListener('click', () => {
-      showConvertModal(lead);
-    });
-
     // Delete (demo only)
     document.getElementById('delete-lead-btn')?.addEventListener('click', () => {
       if (confirm(`Delete lead for ${lead.name}?`)) {
         LP.data.leads = LP.data.leads.filter(l => l.id !== lead.id);
         close();
         LP.toast.warning('Lead deleted', 'This action is logged in the audit trail');
-      }
-    });
-  }
-
-  function showConvertModal(lead) {
-    const overlay = document.createElement('div');
-    overlay.className = 'modal-overlay';
-    overlay.innerHTML = `
-      <div class="modal">
-        <div class="modal-title">Mark Lead as Converted</div>
-        <div class="modal-subtitle">Fire a Purchase event to Meta CAPI</div>
-        <div class="form-group">
-          <label class="form-label">Deal Amount (INR)</label>
-          <input class="form-input" type="number" id="conv-amount" placeholder="e.g. 15000">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Service Name</label>
-          <input class="form-input" id="conv-service" placeholder="e.g. Premium Package">
-        </div>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" id="conv-cancel">Cancel</button>
-          <button class="btn btn-primary" id="conv-save">Convert Lead</button>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
-    overlay.querySelector('#conv-cancel').addEventListener('click', () => overlay.remove());
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-    overlay.querySelector('#conv-save').addEventListener('click', async () => {
-      const amountStr = overlay.querySelector('#conv-amount').value.trim();
-      const service   = overlay.querySelector('#conv-service').value.trim();
-      if (!amountStr || isNaN(amountStr)) { LP.toast.warning('Invalid Amount', 'Please enter a valid deal amount'); return; }
-      
-      const btn = overlay.querySelector('#conv-save');
-      btn.textContent = 'Processing...';
-      btn.disabled = true;
-
-      try {
-        await LP.api.convertLead(lead.id, { value: Number(amountStr), content_name: service });
-        
-        // Refresh leads from API
-        LP.data.leads = await LP.api.getLeads();
-        const updatedLead = LP.data.leads.find(l => l.id === lead.id);
-        
-        overlay.remove();
-        LP.toast.success('Converted Successfully!', \`Purchase event fired for ₹\${amountStr}\`);
-        
-        // Update drawer if open
-        if (currentLead && currentLead.id === lead.id) {
-          open(updatedLead);
-        }
-        
-        // Update page table
-        const mod = LP.router.pageMap[LP.router.current];
-        if (mod && mod.init) {
-          mod.init(document.getElementById('page-content'));
-        }
-      } catch (err) {
-        btn.textContent = 'Convert Lead';
-        btn.disabled = false;
-        LP.toast.warning('Conversion Failed', err.message);
       }
     });
   }
