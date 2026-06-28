@@ -10,12 +10,7 @@ LP.pages.team = (() => {
   let selectedAgentId = null;
 
   function timeAgo(isoStr) {
-    if (!isoStr) return '';
-    const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
-    if (diff < 60)   return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    if (diff < 86400)return `${Math.floor(diff/3600)}h ago`;
-    return `${Math.floor(diff/86400)}d ago`;
+    return LP.utils.formatRelativeTime(isoStr);
   }
 
   function getAgentLeads(agentId) {
@@ -61,7 +56,9 @@ LP.pages.team = (() => {
     }
     return activities.map(a => `
       <div style="display:flex;gap:12px;margin-bottom:16px;font-size:13px">
-        <div style="margin-top:2px;color:var(--primary)">${a.type === 'note' ? '📝' : (a.type === 'status' ? '🔄' : '👤')}</div>
+        <div style="margin-top:2px;color:var(--primary);display:flex;align-items:center;justify-content:center">
+          ${a.type === 'note' ? LP.icons.get('pencil', 'icon-sm') : (a.type === 'status' || a.type === 'status_change' ? LP.icons.get('refresh-cw', 'icon-sm') : LP.icons.get('user', 'icon-sm'))}
+        </div>
         <div style="flex:1">
           <div style="margin-bottom:4px">
             <strong style="color:var(--text-1)">${a.user}</strong> 
@@ -144,7 +141,9 @@ LP.pages.team = (() => {
           <div class="page-subtitle">Assign leads to agents and track their activities</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-primary btn-sm" id="add-agent-btn">+ Add New Agent</button>
+          <button class="btn btn-primary btn-sm" id="add-agent-btn" style="display:flex;align-items:center;gap:4px">
+            ${LP.icons.get('plus', 'icon-sm')} Add New Agent
+          </button>
         </div>
       </div>
       <div style="display:flex;gap:24px;align-items:flex-start">

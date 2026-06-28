@@ -42,19 +42,19 @@ LP.pages.clients = (() => {
 
         <div class="client-stats">
           <div>
-            <div class="client-stat-value" style="color:${c.color}">${c.leadsToday}</div>
+            <div class="client-stat-value tabular-nums" style="color:${c.color}">${LP.utils.formatNumber(c.leadsToday)}</div>
             <div class="client-stat-label">Leads Today</div>
           </div>
           <div>
-            <div class="client-stat-value">₹${c.cpl}</div>
+            <div class="client-stat-value tabular-nums">${LP.utils.formatCurrency(c.cpl)}</div>
             <div class="client-stat-label">Avg CPL</div>
           </div>
           <div>
-            <div class="client-stat-value">${c.convRate}%</div>
+            <div class="client-stat-value tabular-nums">${LP.utils.formatPercent(c.convRate)}</div>
             <div class="client-stat-label">Conv. Rate</div>
           </div>
           <div>
-            <div class="client-stat-value">${c.forms}</div>
+            <div class="client-stat-value tabular-nums">${LP.utils.formatNumber(c.forms)}</div>
             <div class="client-stat-label">Active Forms</div>
           </div>
         </div>
@@ -72,17 +72,17 @@ LP.pages.clients = (() => {
         </div>
 
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 8px"
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px"
             onclick="event.stopPropagation();LP.toast.success('Sync started','Fetching latest leads from Meta Graph API for ${c.name}')">
-            🔄 Sync Leads
+            ${LP.icons.get('refresh-cw', 'icon-sm')} Sync Leads
           </button>
-          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 8px"
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px"
             onclick="event.stopPropagation();LP.router.navigate('leads')">
-            📋 View Leads
+            ${LP.icons.get('inbox', 'icon-sm')} View Leads
           </button>
-          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 8px"
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 8px;display:flex;align-items:center;gap:4px"
             onclick="event.stopPropagation();showClientSettings('${c.id}')">
-            ⚙ Settings
+            ${LP.icons.get('settings', 'icon-sm')} Settings
           </button>
         </div>
       </div>
@@ -128,8 +128,9 @@ LP.pages.clients = (() => {
           <input class="form-input" id="nc-account" placeholder="act_XXXXXXXXXX">
         </div>
 
-        <div style="background:rgba(24,119,242,0.08);border:1px solid rgba(24,119,242,0.2);border-radius:8px;padding:12px;font-size:12px;color:var(--text-2);margin-bottom:16px">
-          ℹ After adding, you'll be redirected to Meta OAuth to grant <strong>leads_retrieval</strong> permission for this account.
+        <div style="background:rgba(24,119,242,0.08);border:1px solid rgba(24,119,242,0.2);border-radius:8px;padding:12px;font-size:12px;color:var(--text-2);margin-bottom:16px;display:flex;align-items:flex-start;gap:8px">
+          ${LP.icons.get('circle-dot', 'icon-sm')}
+          <div>After adding, you'll be redirected to Meta OAuth to grant <strong>leads_retrieval</strong> permission for this account.</div>
         </div>
 
         <div class="modal-actions">
@@ -149,7 +150,7 @@ LP.pages.clients = (() => {
       const account  = overlay.querySelector('#nc-account').value.trim();
       if (!name) { LP.toast.warning('Enter business name', ''); return; }
       const colors = ['#1877F2','#6C47FF','#10B981','#F59E0B','#EF4444','#0EA5E9'];
-      const icons  = ['🏠','🎓','🏥','🏦','🛒','🚗','💼'];
+      const icons  = [LP.icons.get('building', 'icon-md'), LP.icons.get('briefcase', 'icon-md')];
       LP.data.clients.push({
         id: `c${Date.now()}`, name, industry, city,
         color: colors[Math.floor(Math.random()*colors.length)],
@@ -252,23 +253,23 @@ LP.pages.clients = (() => {
       <!-- Summary row -->
       <div class="kpi-grid stagger" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:24px">
         <div class="kpi-card" style="--kpi-color:#1877F2;--kpi-icon-bg:rgba(24,119,242,0.12)">
-          <div class="kpi-icon">◫</div>
-          <div class="kpi-value">${LP.data.clients.length}</div>
+          <div class="kpi-icon" style="color:#1877F2">${LP.icons.get('building', 'icon-md')}</div>
+          <div class="kpi-value tabular-nums">${LP.utils.formatNumber(LP.data.clients.length)}</div>
           <div class="kpi-label">Total Clients</div>
         </div>
         <div class="kpi-card" style="--kpi-color:#10B981;--kpi-icon-bg:rgba(16,185,129,0.12)">
-          <div class="kpi-icon">●</div>
-          <div class="kpi-value">${connected}</div>
+          <div class="kpi-icon" style="color:#10B981">${LP.icons.get('plug', 'icon-md')}</div>
+          <div class="kpi-value tabular-nums">${LP.utils.formatNumber(connected)}</div>
           <div class="kpi-label">Connected</div>
         </div>
         <div class="kpi-card" style="--kpi-color:#F59E0B;--kpi-icon-bg:rgba(245,158,11,0.12)">
-          <div class="kpi-icon">⚡</div>
-          <div class="kpi-value">${totalLeads}</div>
+          <div class="kpi-icon" style="color:#F59E0B">${LP.icons.get('activity', 'icon-md')}</div>
+          <div class="kpi-value tabular-nums">${LP.utils.formatNumber(totalLeads)}</div>
           <div class="kpi-label">Leads Today</div>
         </div>
         <div class="kpi-card" style="--kpi-color:#6C47FF;--kpi-icon-bg:rgba(108,71,255,0.12)">
-          <div class="kpi-icon">₹</div>
-          <div class="kpi-value">₹${avgCPL}</div>
+          <div class="kpi-icon" style="color:#6C47FF">${LP.icons.get('badge-indian-rupee', 'icon-md')}</div>
+          <div class="kpi-value tabular-nums">${LP.utils.formatCurrency(avgCPL)}</div>
           <div class="kpi-label">Avg CPL</div>
         </div>
       </div>

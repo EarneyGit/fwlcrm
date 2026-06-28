@@ -1839,6 +1839,68 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
 }
 
+/* ─── ICONS & STATES ─────────────────────────────────────── */
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.icon-svg {
+  width: 1em;
+  height: 1em;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icon-sm { font-size: 16px; }
+.icon-md { font-size: 20px; }
+.icon-lg { font-size: 24px; }
+
+/* Status Classes */
+.status-success { color: var(--success); }
+.status-warning { color: var(--warning); }
+.status-error { color: var(--danger); }
+.status-live { color: var(--accent); }
+
+/* Empty States */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  border: 1px dashed var(--border-2);
+}
+.empty-state .icon {
+  font-size: 24px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+/* Skeletons */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+.skeleton {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: var(--surface-3);
+  border-radius: 4px;
+}
+.skeleton-text { height: 16px; width: 60%; margin-bottom: 8px; }
+.skeleton-title { height: 24px; width: 40%; margin-bottom: 16px; }
+.skeleton-avatar { width: 32px; height: 32px; border-radius: 50%; }
+
+/* Tabular numbers for KPI */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
 /* ─── RESPONSIVE ─────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .grid-3 { grid-template-columns: 1fr 1fr; }

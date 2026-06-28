@@ -11,34 +11,43 @@ LP.pages.dashboard = (() => {
   let streamUnsubscribe = null;
   let slaTimer = null;
 
-  function timeAgo(isoStr) {
-    const diff = Math.floor((Date.now() - new Date(isoStr)) / 1000);
-    if (diff < 60)   return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    return `${Math.floor(diff/3600)}h ago`;
-  }
-
   function sourceBadge(source) {
     if (source === 'instagram') return '<span class="badge badge-ig" style="font-size:10px">IG</span>';
     return '<span class="badge badge-fb" style="font-size:10px">FB</span>';
   }
 
   function renderKPIs() {
+    // If stats don't exist yet, show skeleton
+    if (!LP.data || !LP.data.stats) {
+      return `
+        <div class="kpi-grid stagger">
+          ${[1,2,3,4].map(() => `
+            <div class="kpi-card skeleton" style="height:120px;padding:24px;border-color:transparent"></div>
+          `).join('')}
+        </div>
+      `;
+    }
+
     const s = LP.data.stats;
+    const { formatNumber, formatCurrency, formatDelta } = LP.utils;
+    const { get } = LP.icons;
+
     return `
       <div class="kpi-grid stagger">
         <div class="kpi-card" style="--kpi-color:#1877F2;--kpi-icon-bg:rgba(24,119,242,0.12)">
-          <div class="kpi-icon">⚡</div>
-          <div class="kpi-value" id="kpi-leads">${s.leadsToday}</div>
+          <div class="kpi-icon" style="color:#1877F2">${get('users', 'icon-md')}</div>
+          <div class="kpi-value tabular-nums" id="kpi-leads">${formatNumber(s.leadsToday)}</div>
           <div class="kpi-label">Leads Today</div>
-          <div class="kpi-delta up">↑ ${Math.abs(s.leadsToday - s.leadsYesterday)} vs yesterday</div>
+          <div class="kpi-delta ${s.leadsToday >= s.leadsYesterday ? 'up' : 'down'}">
+            ${formatDelta(s.leadsToday - s.leadsYesterday)} vs yesterday
+          </div>
           <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40">
             <polyline points="0,35 15,28 30,32 45,20 60,15 75,8" fill="none" stroke="#1877F2" stroke-width="2"/>
           </svg>
         </div>
         <div class="kpi-card" style="--kpi-color:#10B981;--kpi-icon-bg:rgba(16,185,129,0.12)">
-          <div class="kpi-icon">₹</div>
-          <div class="kpi-value" id="kpi-cpl">${s.avgCPL}</div>
+          <div class="kpi-icon" style="color:#10B981">${get('badge-indian-rupee', 'icon-md')}</div>
+          <div class="kpi-value tabular-nums" id="kpi-cpl">${formatCurrency(s.avgCPL)}</div>
           <div class="kpi-label">Avg Cost Per Lead</div>
           <div class="kpi-delta up">↓ ₹80 vs yesterday (CAPI effect)</div>
           <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40">
@@ -46,8 +55,8 @@ LP.pages.dashboard = (() => {
           </svg>
         </div>
         <div class="kpi-card" style="--kpi-color:#F59E0B;--kpi-icon-bg:rgba(245,158,11,0.12)">
-          <div class="kpi-icon">⏱</div>
-          <div class="kpi-value" id="kpi-rt">${s.avgResponse}</div>
+          <div class="kpi-icon" style="color:#F59E0B">${get('clock', 'icon-md')}</div>
+          <div class="kpi-value tabular-nums" id="kpi-rt">${LP.utils.formatDuration(s.avgResponse)}</div>
           <div class="kpi-label">Avg Response Time</div>
           <div class="kpi-delta up">↓ 1.9 min vs yesterday</div>
           <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40">
@@ -55,8 +64,8 @@ LP.pages.dashboard = (() => {
           </svg>
         </div>
         <div class="kpi-card" style="--kpi-color:#6C47FF;--kpi-icon-bg:rgba(108,71,255,0.12)">
-          <div class="kpi-icon">📈</div>
-          <div class="kpi-value" id="kpi-conv">${s.convRate}</div>
+          <div class="kpi-icon" style="color:#6C47FF">${get('bar-chart-3', 'icon-md')}</div>
+          <div class="kpi-value tabular-nums" id="kpi-conv">${s.convRate || '0%'}</div>
           <div class="kpi-label">Conversion Rate</div>
           <div class="kpi-delta up">↑ 0.9% vs last week</div>
           <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40">
@@ -68,28 +77,31 @@ LP.pages.dashboard = (() => {
   }
 
   function renderSLAAlerts() {
+    if (!LP.data || !LP.data.leads) return '';
     const breached = LP.data.leads.filter(l => l.status === 'new' && l.slaBreached).slice(0, 3);
     if (!breached.length) return '';
 
     return `
-      <div class="card mb-16" style="border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.04)">
+      <div class="card mb-16" style="border-color:var(--danger-dim);background:rgba(239,68,68,0.04)">
         <div class="card-header">
           <div>
-            <div class="card-title text-danger">🔴 SLA Breaches — ${breached.length} lead${breached.length > 1 ? 's' : ''} uncontacted</div>
+            <div class="card-title status-error" style="display:flex;align-items:center;gap:6px">
+              ${LP.icons.get('alert-circle', 'icon-sm')} SLA Breaches — ${breached.length} lead${breached.length > 1 ? 's' : ''} uncontacted
+            </div>
             <div class="card-subtitle">Leads not contacted within 15 minutes — 71% loss risk</div>
           </div>
           <span class="badge badge-danger">${breached.length} URGENT</span>
         </div>
         ${breached.map(l => `
           <div class="sla-alert" data-lead-id="${l.id}">
-            <span class="sla-icon">⚠</span>
+            <span class="sla-icon status-error">${LP.icons.get('alert-circle', 'icon-sm')}</span>
             <div class="sla-text">
               <div class="sla-name">${l.name}</div>
-              <div class="sla-sub">${l.campaign} · ${l.clientName} · ${timeAgo(l.createdAt)}</div>
+              <div class="sla-sub">${l.campaign} · ${l.clientName} · ${LP.utils.formatRelativeTime(l.createdAt)}</div>
             </div>
-            <span class="badge badge-fb" style="font-size:10px">${l.source === 'instagram' ? '📸 IG' : '📘 FB'}</span>
-            <button class="btn btn-success btn-sm" onclick="LP.toast.success('WhatsApp sent!','Template dispatched to ${l.phone}')">
-              💬 WhatsApp
+            <span class="badge badge-fb" style="font-size:10px">${l.source === 'instagram' ? 'IG' : 'FB'}</span>
+            <button class="btn btn-success btn-sm" onclick="LP.toast.success('WhatsApp sent!','Template dispatched to ${l.phone}')" style="display:flex;align-items:center;gap:4px">
+              ${LP.icons.get('message-circle', 'icon-sm')} WhatsApp
             </button>
           </div>
         `).join('')}
@@ -110,7 +122,7 @@ LP.pages.dashboard = (() => {
           </div>
         </div>
         <div style="text-align:right;flex-shrink:0">
-          <div class="feed-time">${timeAgo(lead.createdAt)}</div>
+          <div class="feed-time">${LP.utils.formatRelativeTime(lead.createdAt)}</div>
           <span class="badge badge-${lead.status}" style="margin-top:4px;display:inline-flex">${lead.status}</span>
         </div>
       </div>
@@ -118,18 +130,81 @@ LP.pages.dashboard = (() => {
   }
 
   function renderSourceChart() {
+    if (!LP.data || !LP.data.leads) return '<div class="skeleton" style="height:200px"></div>';
+    
     const fbCount = LP.data.leads.filter(l => l.source === 'facebook').length;
     const igCount = LP.data.leads.filter(l => l.source === 'instagram').length;
     const total = fbCount + igCount;
-    const fbPct = Math.round(fbCount / total * 100);
-    const igPct = 100 - fbPct;
+    
+    const fbPct = total === 0 ? 0 : Math.round((fbCount / total) * 100);
+    const igPct = total === 0 ? 0 : 100 - fbPct;
 
-    const clientBreakdown = LP.data.clients.slice(0, 5).map(c => ({
+    const clientBreakdown = LP.data.clients ? LP.data.clients.slice(0, 5).map(c => ({
       name: c.name.split(' ')[0],
       value: c.leadsToday,
       color: c.color,
-    }));
-    const maxVal = Math.max(...clientBreakdown.map(c => c.value));
+    })) : [];
+    
+    const maxVal = clientBreakdown.length ? Math.max(...clientBreakdown.map(c => c.value)) : 1;
+
+    let sourceContent = '';
+    if (total === 0) {
+      sourceContent = `
+        <div class="empty-state" style="height:150px;border:none;background:transparent">
+          ${LP.icons.get('pie-chart', 'icon-lg')}
+          <div style="margin-top:12px;font-weight:500;color:var(--text-2)">No source data</div>
+          <div style="font-size:12px">Waiting for leads to arrive</div>
+        </div>
+      `;
+    } else {
+      sourceContent = `
+        <div class="donut-wrap">
+          <svg width="90" height="90" viewBox="0 0 90 90" style="flex-shrink:0">
+            <circle cx="45" cy="45" r="38" fill="none" stroke="var(--surface-3)" stroke-width="12"/>
+            <circle cx="45" cy="45" r="38" fill="none" stroke="#1877F2" stroke-width="12"
+              stroke-dasharray="${fbPct * 2.39} ${(100-fbPct) * 2.39}"
+              stroke-dashoffset="0" transform="rotate(-90 45 45)"/>
+            <circle cx="45" cy="45" r="38" fill="none" stroke="#D946EF" stroke-width="12"
+              stroke-dasharray="${igPct * 2.39} ${(100-igPct) * 2.39}"
+              stroke-dashoffset="${-fbPct * 2.39}" transform="rotate(-90 45 45)"/>
+            <text x="45" y="49" text-anchor="middle" fill="var(--text-1)" font-size="13" font-weight="700">${LP.utils.formatNumber(total)}</text>
+          </svg>
+          <div class="donut-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#1877F2"></div>
+              <div class="legend-label">Facebook</div>
+              <div class="legend-value tabular-nums">${LP.utils.formatNumber(fbCount)} <span style="color:var(--text-3);font-weight:400">(${fbPct}%)</span></div>
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#D946EF"></div>
+              <div class="legend-label">Instagram</div>
+              <div class="legend-value tabular-nums">${LP.utils.formatNumber(igCount)} <span style="color:var(--text-3);font-weight:400">(${igPct}%)</span></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    let clientsContent = '';
+    if (clientBreakdown.length === 0 || maxVal === 0) {
+      clientsContent = `
+        <div class="empty-state" style="height:150px;border:none;background:transparent">
+          ${LP.icons.get('briefcase', 'icon-lg')}
+          <div style="margin-top:12px;font-weight:500;color:var(--text-2)">No client activity</div>
+        </div>
+      `;
+    } else {
+      clientsContent = `
+        <div class="bar-chart">
+          ${clientBreakdown.map(c => `
+            <div class="bar-col">
+              <div class="bar" style="height:${Math.max(8, c.value/maxVal*70)}px;background:${c.color}"></div>
+              <div class="bar-label">${c.name}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
 
     return `
       <div class="grid-2" style="margin-bottom:24px">
@@ -141,30 +216,7 @@ LP.pages.dashboard = (() => {
               <div class="card-subtitle">Today's split</div>
             </div>
           </div>
-          <div class="donut-wrap">
-            <svg width="90" height="90" viewBox="0 0 90 90" style="flex-shrink:0">
-              <circle cx="45" cy="45" r="38" fill="none" stroke="var(--surface-3)" stroke-width="12"/>
-              <circle cx="45" cy="45" r="38" fill="none" stroke="#1877F2" stroke-width="12"
-                stroke-dasharray="${fbPct * 2.39} ${(100-fbPct) * 2.39}"
-                stroke-dashoffset="0" transform="rotate(-90 45 45)"/>
-              <circle cx="45" cy="45" r="38" fill="none" stroke="#D946EF" stroke-width="12"
-                stroke-dasharray="${igPct * 2.39} ${(100-igPct) * 2.39}"
-                stroke-dashoffset="${-fbPct * 2.39}" transform="rotate(-90 45 45)"/>
-              <text x="45" y="49" text-anchor="middle" fill="var(--text-1)" font-size="13" font-weight="700">${total}</text>
-            </svg>
-            <div class="donut-legend">
-              <div class="legend-item">
-                <div class="legend-dot" style="background:#1877F2"></div>
-                <div class="legend-label">Facebook</div>
-                <div class="legend-value">${fbCount} <span style="color:var(--text-3);font-weight:400">(${fbPct}%)</span></div>
-              </div>
-              <div class="legend-item">
-                <div class="legend-dot" style="background:#D946EF"></div>
-                <div class="legend-label">Instagram</div>
-                <div class="legend-value">${igCount} <span style="color:var(--text-3);font-weight:400">(${igPct}%)</span></div>
-              </div>
-            </div>
-          </div>
+          ${sourceContent}
         </div>
 
         <!-- Client breakdown bar chart -->
@@ -175,21 +227,31 @@ LP.pages.dashboard = (() => {
               <div class="card-subtitle">Leads received</div>
             </div>
           </div>
-          <div class="bar-chart">
-            ${clientBreakdown.map(c => `
-              <div class="bar-col">
-                <div class="bar" style="height:${Math.max(8, c.value/maxVal*70)}px;background:${c.color}"></div>
-                <div class="bar-label">${c.name}</div>
-              </div>
-            `).join('')}
-          </div>
+          ${clientsContent}
         </div>
       </div>
     `;
   }
 
   function render() {
-    const recentLeads = LP.data.leads.slice(0, 20);
+    const recentLeads = LP.data?.leads ? LP.data.leads.slice(0, 20) : [];
+    
+    let feedContent = '';
+    if (!LP.data || !LP.data.leads) {
+      feedContent = [1,2,3,4,5].map(() => `<div class="feed-item skeleton" style="height:50px;border:none"></div>`).join('');
+    } else if (recentLeads.length === 0) {
+      feedContent = `
+        <div class="empty-state">
+          ${LP.icons.get('inbox', 'icon-lg')}
+          <div style="margin-top:16px;font-weight:500;color:var(--text-1)">No leads yet</div>
+          <div style="margin-top:4px;font-size:13px">Your live feed will populate here</div>
+        </div>
+      `;
+    } else {
+      feedContent = recentLeads.map(renderFeedItem).join('');
+    }
+
+    const leadsTotal = LP.data?.leads ? LP.data.leads.length : 0;
 
     return `
       <div class="page-header">
@@ -214,7 +276,7 @@ LP.pages.dashboard = (() => {
 
       <div class="grid-2">
         <!-- Live feed -->
-        <div class="card" style="grid-column:span 1">
+        <div class="card" style="grid-column:span 1;display:flex;flex-direction:column">
           <div class="card-header">
             <div>
               <div class="card-title">Live Lead Feed</div>
@@ -224,8 +286,8 @@ LP.pages.dashboard = (() => {
               <div class="live-dot"></div> LIVE
             </div>
           </div>
-          <div class="live-feed" id="live-feed">
-            ${recentLeads.map(renderFeedItem).join('')}
+          <div class="live-feed" id="live-feed" style="flex:1">
+            ${feedContent}
           </div>
         </div>
 
@@ -237,15 +299,14 @@ LP.pages.dashboard = (() => {
               <div class="card-title">Pipeline Status</div>
             </div>
             ${['new','contacted','qualified','won','lost'].map(status => {
-              const count = LP.data.leads.filter(l => l.status === status).length;
-              const total = LP.data.leads.length;
-              const pct   = Math.round(count / total * 100);
+              const count = LP.data?.leads ? LP.data.leads.filter(l => l.status === status).length : 0;
+              const pct = leadsTotal === 0 ? 0 : Math.round((count / leadsTotal) * 100);
               const colors = { new:'#0EA5E9', contacted:'#F59E0B', qualified:'#8B5CF6', won:'#10B981', lost:'#EF4444' };
               return `
                 <div style="margin-bottom:12px">
                   <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
                     <span style="text-transform:capitalize;font-weight:500">${status}</span>
-                    <span style="color:var(--text-3)">${count} leads (${pct}%)</span>
+                    <span style="color:var(--text-3)" class="tabular-nums">${LP.utils.formatNumber(count)} leads (${pct}%)</span>
                   </div>
                   <div class="progress-bar">
                     <div class="progress-fill" style="width:${pct}%;background:${colors[status]}"></div>
@@ -258,13 +319,17 @@ LP.pages.dashboard = (() => {
           <!-- Webhook status -->
           <div class="card">
             <div class="card-header">
-              <div class="card-title">Webhook Status</div>
-              <span class="badge badge-success">● Active</span>
+              <div class="card-title" style="display:flex;align-items:center;gap:6px">
+                ${LP.icons.get('plug', 'icon-sm')} Webhook Status
+              </div>
+              <span class="badge badge-success" style="display:flex;align-items:center;gap:4px">
+                <div class="live-dot" style="background:var(--success);box-shadow:none"></div> Active
+              </span>
             </div>
             <div style="font-size:12.5px;color:var(--text-2);line-height:1.8">
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
                 <span>Total received (all time)</span>
-                <strong class="text-meta">4,892</strong>
+                <strong class="text-meta tabular-nums">4,892</strong>
               </div>
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
                 <span>Last ping</span>
@@ -272,30 +337,34 @@ LP.pages.dashboard = (() => {
               </div>
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
                 <span>Failed (24h)</span>
-                <strong class="text-success">0</strong>
+                <strong class="text-success tabular-nums">0</strong>
               </div>
               <div class="flex-between" style="padding:4px 0">
                 <span>Avg processing time</span>
-                <strong>2.1s</strong>
+                <strong class="tabular-nums">2.1s</strong>
               </div>
             </div>
           </div>
 
           <!-- Quick stats -->
           <div class="card">
-            <div class="card-header"><div class="card-title">CAPI Performance</div></div>
+            <div class="card-header">
+              <div class="card-title" style="display:flex;align-items:center;gap:6px">
+                ${LP.icons.get('activity', 'icon-sm')} CAPI Performance
+              </div>
+            </div>
             <div style="font-size:12.5px;color:var(--text-2);line-height:1.8">
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
                 <span>Events pushed today</span>
-                <strong class="text-meta">47</strong>
+                <strong class="text-meta tabular-nums">47</strong>
               </div>
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
                 <span>CPL reduction</span>
-                <strong class="text-success">↓ 28%</strong>
+                <strong class="text-success tabular-nums">↓ 28%</strong>
               </div>
               <div class="flex-between" style="padding:4px 0">
                 <span>Match rate</span>
-                <strong>84.2%</strong>
+                <strong class="tabular-nums">84.2%</strong>
               </div>
             </div>
           </div>
@@ -307,6 +376,11 @@ LP.pages.dashboard = (() => {
   function init(container) {
     container.innerHTML = render();
     container.classList.add('fade-in');
+
+    if (!LP.data || !LP.data.leads) {
+      // Data isn't loaded yet, let app.js re-render later or we can wait
+      // But in this SPA, app.js already handles fetching and re-rendering via DOMContentLoaded
+    }
 
     // Clickable SLA alerts
     container.querySelectorAll('.sla-alert[data-lead-id]').forEach(el => {
@@ -326,43 +400,48 @@ LP.pages.dashboard = (() => {
     });
 
     // Subscribe to live lead stream
-    streamUnsubscribe = LP.stream.on(lead => {
-      // Update KPI
-      const kpiEl = document.getElementById('kpi-leads');
-      if (kpiEl) {
-        kpiEl.textContent = LP.data.stats.leadsToday;
-        kpiEl.parentElement.style.animation = 'none';
-        requestAnimationFrame(() => {
-          kpiEl.parentElement.style.animation = '';
-          kpiEl.parentElement.style.boxShadow = '0 0 0 3px rgba(24,119,242,0.3)';
-          setTimeout(() => { kpiEl.parentElement.style.boxShadow = ''; }, 800);
-        });
-      }
+    if (LP.stream) {
+      streamUnsubscribe = LP.stream.on(lead => {
+        // Update KPI
+        const kpiEl = document.getElementById('kpi-leads');
+        if (kpiEl && LP.data && LP.data.stats) {
+          kpiEl.textContent = LP.utils.formatNumber(LP.data.stats.leadsToday);
+          kpiEl.parentElement.style.animation = 'none';
+          requestAnimationFrame(() => {
+            kpiEl.parentElement.style.animation = '';
+            kpiEl.parentElement.style.boxShadow = '0 0 0 3px rgba(24,119,242,0.3)';
+            setTimeout(() => { kpiEl.parentElement.style.boxShadow = ''; }, 800);
+          });
+        }
 
-      // Prepend to feed
-      const feed = document.getElementById('live-feed');
-      if (feed) {
-        const div = document.createElement('div');
-        div.innerHTML = renderFeedItem(lead);
-        const item = div.firstElementChild;
-        item.addEventListener('click', () => LP.drawer.open(lead));
-        feed.insertBefore(item, feed.firstChild);
-        // Trim to 20
-        while (feed.children.length > 20) feed.lastChild.remove();
-      }
+        // Prepend to feed
+        const feed = document.getElementById('live-feed');
+        if (feed) {
+          // Remove empty state if present
+          if (feed.querySelector('.empty-state')) feed.innerHTML = '';
+          const div = document.createElement('div');
+          div.innerHTML = renderFeedItem(lead);
+          const item = div.firstElementChild;
+          item.addEventListener('click', () => LP.drawer.open(lead));
+          feed.insertBefore(item, feed.firstChild);
+          // Trim to 20
+          while (feed.children.length > 20) feed.lastChild.remove();
+        }
 
-      // Toast
-      LP.toast.newLead(lead);
-    });
+        // Toast
+        if (LP.toast) LP.toast.newLead(lead);
+      });
+    }
 
     // SLA timer check every 60s
     slaTimer = setInterval(() => {
+      if (!LP.data || !LP.data.leads) return;
       const breached = LP.data.leads.filter(l => l.status === 'new' && !l.slaBreached);
       breached.forEach(l => {
         const mins = (Date.now() - new Date(l.createdAt)) / 60000;
         if (mins > 15) {
           l.slaBreached = true;
-          LP.toast.slaAlert(l.name);
+          if (LP.toast) LP.toast.slaAlert(l.name);
         }
       });
     }, 60000);

@@ -23,8 +23,8 @@ LP.pages.leads = (() => {
   }
 
   function sourceBadge(source) {
-    if (source === 'instagram') return '<span class="badge badge-ig">📸 IG</span>';
-    return '<span class="badge badge-fb">📘 FB</span>';
+    if (source === 'instagram') return '<span class="badge badge-ig">IG</span>';
+    return '<span class="badge badge-fb">FB</span>';
   }
 
   function statusBadge(status) {
@@ -56,9 +56,9 @@ LP.pages.leads = (() => {
     if (!leads.length) return `
       <tr><td colspan="8">
         <div class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <div class="empty-title">No leads found</div>
-          <div class="empty-desc">Try adjusting your filters or search query</div>
+          ${LP.icons.get('search', 'icon-lg')}
+          <div style="margin-top:12px;font-weight:500;color:var(--text-1)">No leads found</div>
+          <div style="margin-top:4px;font-size:13px;color:var(--text-3)">Try adjusting your filters or search query</div>
         </div>
       </td></tr>
     `;
@@ -96,14 +96,18 @@ LP.pages.leads = (() => {
           <div style="font-size:12px;color:var(--text-2)">${lead.city}</div>
         </td>
         <td>
-          <div style="font-size:12px;color:var(--text-2)">${timeAgo(lead.createdAt)}</div>
+          <div style="font-size:12px;color:var(--text-2)">${LP.utils.formatRelativeTime(lead.createdAt)}</div>
         </td>
         <td onclick="event.stopPropagation()">
           <div style="display:flex;gap:4px">
             <button class="btn btn-success btn-sm" style="padding:4px 8px;font-size:11px"
-              onclick="LP.toast.success('WhatsApp sent!','Template dispatched via Cloud API')">💬</button>
+              onclick="LP.toast.success('WhatsApp sent!','Template dispatched via Cloud API')">
+              ${LP.icons.get('message-circle', 'icon-sm')}
+            </button>
             <button class="btn btn-secondary btn-sm" style="padding:4px 8px;font-size:11px"
-              onclick="LP.toast.info('Exotel calling...','Connecting to ${lead.phone}')">📞</button>
+              onclick="LP.toast.info('Exotel calling...','Connecting to ${lead.phone}')">
+              ${LP.icons.get('phone', 'icon-sm')}
+            </button>
           </div>
         </td>
       </tr>
@@ -131,8 +135,12 @@ LP.pages.leads = (() => {
           <div class="page-subtitle">All leads from Facebook & Instagram Lead Ads</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <button class="btn btn-ghost btn-sm" id="export-btn">📥 Export CSV</button>
-          <button class="btn btn-primary btn-sm" id="add-lead-btn">+ Add Manual Lead</button>
+          <button class="btn btn-ghost btn-sm" id="export-btn" style="display:flex;align-items:center;gap:4px">
+            ${LP.icons.get('database', 'icon-sm')} Export CSV
+          </button>
+          <button class="btn btn-primary btn-sm" id="add-lead-btn" style="display:flex;align-items:center;gap:4px">
+            ${LP.icons.get('plus', 'icon-sm')} Add Manual Lead
+          </button>
         </div>
       </div>
 
@@ -155,9 +163,11 @@ LP.pages.leads = (() => {
         </select>
 
         <!-- Search -->
-        <div class="topbar-search" style="width:220px">
-          <span style="color:var(--text-3);font-size:14px">🔍</span>
-          <input type="text" id="lead-search" placeholder="Search leads..." value="${currentSearch}">
+        <div class="topbar-search" style="width:220px;position:relative">
+          <div style="position:absolute;left:10px;top:50%;transform:translateY(-50%);display:flex;color:var(--text-3)">
+            ${LP.icons.get('search', 'icon-sm')}
+          </div>
+          <input type="text" id="lead-search" placeholder="Search leads..." value="${currentSearch}" style="padding-left:32px">
         </div>
       </div>
 
@@ -166,7 +176,9 @@ LP.pages.leads = (() => {
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border)">
           <span style="font-size:12px;color:var(--text-3)" id="leads-count"></span>
           <div style="display:flex;gap:6px;align-items:center">
-            <button class="btn btn-ghost btn-sm" id="bulk-wa-btn">💬 Bulk WhatsApp</button>
+            <button class="btn btn-ghost btn-sm" id="bulk-wa-btn" style="display:flex;align-items:center;gap:4px">
+              ${LP.icons.get('message-circle', 'icon-sm')} Bulk WhatsApp
+            </button>
             <select class="form-select" style="width:140px;padding:5px 28px 5px 10px;font-size:12px" id="sort-sel">
               <option value="newest">Newest First</option>
               <option value="oldest">Oldest First</option>

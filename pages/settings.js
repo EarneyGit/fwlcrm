@@ -163,10 +163,10 @@ LP.pages.settings = (() => {
                 'WhatsApp Cloud API',
                 'Basic analytics',
                 'Email support',
-              ].map(f => `<div class="plan-feature"><span class="check">✓</span>${f}</div>`).join('')}
+              ].map(f => `<div class="plan-feature"><span class="check" style="display:flex;align-items:center;color:var(--success)">${LP.icons.get('check', 'icon-sm')}</span>${f}</div>`).join('')}
             </div>
-            <button class="btn btn-secondary" style="width:100%;margin-top:16px;font-size:13px">
-              ${currentPlan === 'starter' ? '✓ Current Plan' : 'Select Starter'}
+            <button class="btn btn-secondary" style="width:100%;margin-top:16px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:4px">
+              ${currentPlan === 'starter' ? LP.icons.get('check', 'icon-sm') + ' Current Plan' : 'Select Starter'}
             </button>
           </div>
 
@@ -188,10 +188,10 @@ LP.pages.settings = (() => {
                 'SLA alerts + Audit log',
                 'Priority support (Chennai)',
                 'Custom domain',
-              ].map(f => `<div class="plan-feature"><span class="check">✓</span>${f}</div>`).join('')}
+              ].map(f => `<div class="plan-feature"><span class="check" style="display:flex;align-items:center;color:var(--success)">${LP.icons.get('check', 'icon-sm')}</span>${f}</div>`).join('')}
             </div>
-            <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:13px">
-              ${currentPlan === 'pro' ? '✓ Current Plan' : 'Upgrade to Pro →'}
+            <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:4px">
+              ${currentPlan === 'pro' ? LP.icons.get('check', 'icon-sm') + ' Current Plan' : 'Upgrade to Pro →'}
             </button>
           </div>
         </div>
@@ -242,8 +242,9 @@ LP.pages.settings = (() => {
                 <span class="badge badge-success">Approved</span>
               </div>
             </div>
-            <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px;margin-top:12px;font-size:12px;color:var(--text-2)">
-              💡 Meta India reviewers expect a Chennai business address and working WhatsApp opt-in demo in the screencast.
+            <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:12px;margin-top:12px;font-size:12px;color:var(--text-2);display:flex;align-items:flex-start;gap:8px">
+              <div style="color:#F59E0B;flex-shrink:0;margin-top:1px">${LP.icons.get('circle-dot', 'icon-sm')}</div>
+              <div>Meta India reviewers expect a Chennai business address and working WhatsApp opt-in demo in the screencast.</div>
             </div>
           </div>
         </div>
@@ -252,7 +253,9 @@ LP.pages.settings = (() => {
       <!-- Security -->
       <div class="card" style="margin-bottom:24px">
         <div class="card-header">
-          <div class="card-title">🔒 Security & Data</div>
+          <div class="card-title" style="display:flex;align-items:center;gap:6px">
+            ${LP.icons.get('lock', 'icon-sm')} Security & Data
+          </div>
         </div>
         <div class="grid-2">
           <div>
@@ -269,20 +272,20 @@ LP.pages.settings = (() => {
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
                   <span>${s.value}</span>
-                  <span style="color:${s.ok ? 'var(--success)' : 'var(--warning)'}">${s.ok ? '✓' : '⚠'}</span>
+                  <span style="color:${s.ok ? 'var(--success)' : 'var(--warning)'};display:flex;align-items:center">${s.ok ? LP.icons.get('check', 'icon-sm') : LP.icons.get('alert-circle', 'icon-sm')}</span>
                 </div>
               </div>
             `).join('')}
           </div>
           <div>
-            <button class="btn btn-danger" style="width:100%;margin-bottom:10px" onclick="LP.toast.warning('Data deletion scheduled','All PII will be purged in 30 days per IT Act')">
-              🗑 Request Data Deletion
+            <button class="btn btn-danger" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:4px" onclick="LP.toast.warning('Data deletion scheduled','All PII will be purged in 30 days per IT Act')">
+              ${LP.icons.get('trash-2', 'icon-sm')} Request Data Deletion
             </button>
-            <button class="btn btn-secondary" style="width:100%;margin-bottom:10px" onclick="LP.toast.success('Export started','GDPR/IT Act data export will be emailed')">
-              📤 Export All Data
+            <button class="btn btn-secondary" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:4px" onclick="LP.toast.success('Export started','GDPR/IT Act data export will be emailed')">
+              ${LP.icons.get('database', 'icon-sm')} Export All Data
             </button>
-            <button class="btn btn-secondary" style="width:100%" onclick="LP.toast.info('2FA setup','Enable via your Google Authenticator app')">
-              🔐 Enable 2FA
+            <button class="btn btn-secondary" style="width:100%;display:flex;align-items:center;justify-content:center;gap:4px" onclick="LP.toast.info('2FA setup','Enable via your Google Authenticator app')">
+              ${LP.icons.get('lock', 'icon-sm')} Enable 2FA
             </button>
           </div>
         </div>
@@ -295,8 +298,8 @@ LP.pages.settings = (() => {
             <div class="card-title">Audit Log</div>
             <div class="card-subtitle">All actions for IT Act compliance (last 30 days)</div>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="LP.toast.success('Audit log exported!','CSV downloaded')">
-            📥 Export
+          <button class="btn btn-ghost btn-sm" onclick="LP.toast.success('Audit log exported!','CSV downloaded')" style="display:flex;align-items:center;gap:4px">
+            ${LP.icons.get('database', 'icon-sm')} Export
           </button>
         </div>
         ${LP.data.auditLog.map(entry => `

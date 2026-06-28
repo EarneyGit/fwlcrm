@@ -169,7 +169,12 @@ async function initGlobalData() {
       LP.api.getLeads()
     ]);
     LP.data.clients = clients;
-    LP.data.leads = leads;
+    LP.data.leads = leads.map(l => {
+      if (typeof l.assigned_to === 'string') {
+        l.assignedTo = LP.data.agents.find(a => a.id === l.assigned_to) || null;
+      }
+      return l;
+    });
     
     // Refresh current page
     const currentModule = LP.router.pageMap[LP.router.current];
@@ -235,9 +240,7 @@ LP.theme = (() => {
     const btn = document.getElementById('theme-toggle-btn');
     if (!btn) return;
     const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-    btn.innerHTML = isLight 
-      ? '<svg viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'
-      : '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>';
+    btn.innerHTML = LP.icons.get(isLight ? 'moon' : 'sun', 'icon-md');
     btn.title = isLight ? 'Switch to Dark mode' : 'Switch to Light mode';
   }
 

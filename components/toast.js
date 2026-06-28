@@ -20,11 +20,11 @@ LP.toast = (() => {
     if (!container) init();
 
     const icons = {
-      lead:    '⚡',
-      success: '✓',
-      warning: '⚠',
-      danger:  '✕',
-      info:    'ℹ',
+      lead:    LP.icons.get('users', 'icon-md'),
+      success: LP.icons.get('check-circle-2', 'icon-md'),
+      warning: LP.icons.get('alert-circle', 'icon-md'),
+      danger:  LP.icons.get('x-circle', 'icon-md'),
+      info:    LP.icons.get('circle-dot', 'icon-md'),
     };
 
     const el = document.createElement('div');
