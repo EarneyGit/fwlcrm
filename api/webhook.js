@@ -85,13 +85,18 @@ function parseLeadFields(fieldDataArr) {
 // Match Meta page_id to a client row in the DB
 async function resolveClientId(pageId) {
   try {
-    const { rows } = await db.query(
-      'SELECT id FROM clients WHERE account_id = $1 LIMIT 1',
-      [String(pageId)]
+    // First try matching by page_id field
+    const byPage = await db.query(
+      "SELECT id FROM clients WHERE account_id = $1 OR account_id = $2 LIMIT 1",
+      [String(pageId), 'page_' + String(pageId)]
     );
-    if (rows.length) return rows[0].id;
+    if (byPage.rows.length) return byPage.rows[0].id;
+
+    // Fallback: return the first available client
+    const first = await db.query('SELECT id FROM clients ORDER BY name ASC LIMIT 1');
+    if (first.rows.length) return first.rows[0].id;
   } catch (_) {}
-  return 'c1'; // fallback to first client
+  return null;
 }
 
 export default async function handler(req, res) {
