@@ -1,4 +1,24 @@
-// One-time OAuth callback: exchanges code → user token → page token → subscribes page to leadgen webhook
+// OAuth callback: exchanges code -> user token -> page tokens for ALL target pages,
+// subscribes each page to the leadgen webhook, and upserts each as a CRM client
+// (with its page token stored in the DB for per-page lead retrieval).
+const db = require('./_db');
+
+// Pages to connect to the CRM (account_id in clients table = Page ID)
+const TARGET_PAGES = {
+  '101448221738798': {
+    id: 'earney', name: 'Earney Digital Service Solutions',
+    industry: 'Digital Marketing', city: 'Chennai', color: '#1877F2', icon: '\u{1F4E3}',
+  },
+  '1142957065575295': {
+    id: 'madras-crafters', name: 'Madras Crafters',
+    industry: 'Construction', city: 'Chennai', color: '#F59E0B', icon: '\u{1F3D7}\u{FE0F}',
+  },
+  '1092278530646107': {
+    id: 'sree-dhanalakshmi', name: 'Sree Dhanalakshmi Enterprises',
+    industry: 'Building Materials', city: 'Chennai', color: '#10B981', icon: '\u{1F9F1}',
+  },
+};
+
 module.exports = async (req, res) => {
   const { code, error } = req.query;
 
@@ -9,7 +29,7 @@ module.exports = async (req, res) => {
   const APP_ID     = process.env.META_APP_ID     || '2464733710694215';
   const APP_SECRET = process.env.META_APP_SECRET || '';
   const REDIRECT   = 'https://fwl-crm.vercel.app/api/oauth';
-  const PAGE_ID    = '101448221738798'; // Earney Digital Service Solutions
+  const BUSINESS_ID = '101672118766242';
 
   // No code = initiate the OAuth flow
   if (!code) {
@@ -44,82 +64,75 @@ module.exports = async (req, res) => {
     }
     const userToken = tokenData.access_token;
 
-    const BUSINESS_ID = '101672118766242';
-
-    // 2a. Try /me/accounts first
-    let pageToken = null;
-    let pageName = null;
-
-    const accountsRes = await fetch(
-      `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token&access_token=${userToken}`
-    );
-    const accountsData = await accountsRes.json();
-    if (accountsRes.ok && accountsData.data) {
-      const found = accountsData.data.find(p => p.id === PAGE_ID);
-      if (found) { pageToken = found.access_token; pageName = found.name; }
+    // 2. Collect page tokens from all three sources
+    const foundPages = {}; // pageId -> { name, access_token }
+    const sources = [
+      `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token&limit=100&access_token=${userToken}`,
+      `https://graph.facebook.com/v19.0/${BUSINESS_ID}/owned_pages?fields=id,name,access_token&limit=100&access_token=${userToken}`,
+      `https://graph.facebook.com/v19.0/${BUSINESS_ID}/client_pages?fields=id,name,access_token&limit=100&access_token=${userToken}`,
+    ];
+    for (const url of sources) {
+      try {
+        const r = await fetch(url);
+        const d = await r.json();
+        if (r.ok && d.data) {
+          for (const p of d.data) {
+            if (p.access_token && !foundPages[p.id]) {
+              foundPages[p.id] = { name: p.name, access_token: p.access_token };
+            }
+          }
+        }
+      } catch (_) { /* keep going */ }
     }
 
-    // 2b. Fall back to Business Manager owned_pages
-    if (!pageToken) {
-      const bizRes = await fetch(
-        `https://graph.facebook.com/v19.0/${BUSINESS_ID}/owned_pages?fields=id,name,access_token&access_token=${userToken}`
-      );
-      const bizData = await bizRes.json();
-      if (bizRes.ok && bizData.data) {
-        const found = bizData.data.find(p => p.id === PAGE_ID);
-        if (found) { pageToken = found.access_token; pageName = found.name; }
+    // 3. Ensure page_token column exists (idempotent)
+    await db.query(`ALTER TABLE clients ADD COLUMN IF NOT EXISTS page_token TEXT`);
+
+    // 4. For each target page: upsert client row + subscribe to leadgen webhook
+    const results = [];
+    for (const [pageId, meta] of Object.entries(TARGET_PAGES)) {
+      const page = foundPages[pageId];
+      if (!page) {
+        results.push({ page: meta.name, pageId, status: 'FAILED - page token not found (no admin access via OAuth?)' });
+        continue;
       }
-    }
 
-    // 2c. Fall back to client_pages (pages the user manages through the business)
-    if (!pageToken) {
-      const clientRes = await fetch(
-        `https://graph.facebook.com/v19.0/${BUSINESS_ID}/client_pages?fields=id,name,access_token&access_token=${userToken}`
+      await db.query(
+        `INSERT INTO clients (id, name, industry, city, color, icon, account_id, forms, token_days, status, leads_today, cpl, conv_rate, total_leads, campaigns, page_token)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,0,60,'connected',0,0,0,0,0,$8)
+         ON CONFLICT (id) DO UPDATE SET name=$2, account_id=$7, page_token=$8, status='connected', token_days=60`,
+        [meta.id, meta.name, meta.industry, meta.city, meta.color, meta.icon, pageId, page.access_token]
       );
-      const clientData = await clientRes.json();
-      if (clientRes.ok && clientData.data) {
-        const found = clientData.data.find(p => p.id === PAGE_ID);
-        if (found) { pageToken = found.access_token; pageName = found.name; }
-      }
-    }
 
-    if (!pageToken) {
-      // Debug: show all available pages across all sources
-      const allPages = (accountsData.data || []).map(p => `${p.name} (${p.id})`).join(', ');
-      return res.status(400).send(
-        `Earney page (${PAGE_ID}) not found in /me/accounts, owned_pages, or client_pages.<br>` +
-        `/me/accounts: ${allPages || 'none'}`
+      const subRes = await fetch(
+        `https://graph.facebook.com/v19.0/${pageId}/subscribed_apps`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscribed_fields: ['leadgen'], access_token: page.access_token }),
+        }
       );
+      const subData = await subRes.json();
+      results.push({
+        page: meta.name, pageId,
+        status: subData.success ? 'OK - subscribed + client saved' : 'PARTIAL - client saved, subscribe: ' + JSON.stringify(subData),
+      });
     }
 
-    // 3. Subscribe the page to leadgen webhook events
-    const subRes = await fetch(
-      `https://graph.facebook.com/v19.0/${PAGE_ID}/subscribed_apps`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subscribed_fields: ['leadgen'],
-          access_token: pageToken,
-        }),
-      }
-    );
-    const subData = await subRes.json();
+    // 5. Report
+    const otherPages = Object.entries(foundPages)
+      .filter(([id]) => !TARGET_PAGES[id])
+      .map(([id, p]) => `${p.name} (${id})`).join('<br>') || 'none';
 
-    // 4. Return result
-    const status = subData.success ? 'SUCCESS' : 'PARTIAL';
     return res.send(`
       <html><body style="font-family:monospace;padding:20px">
-        <h2>✅ OAuth Setup Complete</h2>
-        <p><b>Page:</b> ${pageName} (${PAGE_ID})</p>
-        <p><b>Page Token (first 40 chars):</b> ${pageToken.substring(0, 40)}...</p>
-        <p><b>Subscription result:</b> ${JSON.stringify(subData)}</p>
-        <p><b>Status:</b> ${status}</p>
-        <hr>
-        <p>Copy the page token below and add it to Vercel as <code>META_PAGE_ACCESS_TOKEN</code>:</p>
-        <textarea rows="4" cols="80">${pageToken}</textarea>
-        <br><br>
-        <a href="/#dashboard">← Go to Dashboard</a>
+        <h2>OAuth Setup Complete</h2>
+        <table border="1" cellpadding="6" style="border-collapse:collapse">
+          <tr><th>Page</th><th>Page ID</th><th>Result</th></tr>
+          ${results.map(r => `<tr><td>${r.page}</td><td>${r.pageId}</td><td>${r.status}</td></tr>`).join('')}
+        </table>
+        <p><b>Other pages you granted (not connected):</b><br>${otherPages}</p>
+        <a href="/#dashboard">&larr; Go to Dashboard</a>
       </body></html>
     `);
   } catch (err) {

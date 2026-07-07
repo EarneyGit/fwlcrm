@@ -20,7 +20,7 @@ function getRawBody(req) {
   });
 }
 
-// ─── Signature verification ───────────────────────────────
+// --- Signature verification ---------------------------------
 function verifySignature(rawBodyBuffer, signatureHeader) {
   if (!APP_SECRET) return true; // skip in dev if secret not configured
   if (!signatureHeader) return false;
@@ -43,15 +43,28 @@ function verifySignature(rawBodyBuffer, signatureHeader) {
   }
 }
 
-// ─── Fetch real lead details from Meta Graph API ──────────
-async function fetchLeadFromMeta(leadgenId) {
-  if (!PAGE_ACCESS_TOKEN) {
-    console.warn('META_PAGE_ACCESS_TOKEN not set — lead data will be incomplete');
+// --- Look up the page-specific access token stored by /api/oauth ---
+async function getPageToken(pageId) {
+  try {
+    const { rows } = await db.query(
+      'SELECT page_token FROM clients WHERE account_id = $1 AND page_token IS NOT NULL LIMIT 1',
+      [String(pageId)]
+    );
+    if (rows.length && rows[0].page_token) return rows[0].page_token;
+  } catch (_) {}
+  return PAGE_ACCESS_TOKEN; // fallback: env token (Earney page)
+}
+
+// --- Fetch real lead details from Meta Graph API -------------
+async function fetchLeadFromMeta(leadgenId, pageId) {
+  const token = await getPageToken(pageId);
+  if (!token) {
+    console.warn('No page token available - lead data will be incomplete');
     return null;
   }
 
   const fields = 'field_data,created_time,ad_id,campaign_id,form_id,page_id';
-  const url = `https://graph.facebook.com/v19.0/${leadgenId}?fields=${fields}&access_token=${PAGE_ACCESS_TOKEN}`;
+  const url = `https://graph.facebook.com/v19.0/${leadgenId}?fields=${fields}&access_token=${token}`;
 
   const response = await fetch(url);
   if (!response.ok) {
@@ -100,7 +113,7 @@ async function resolveClientId(pageId) {
 }
 
 export default async function handler(req, res) {
-  // ── Webhook Verification (GET from Meta) ─────────────────
+  // -- Webhook Verification (GET from Meta) --------------------
   if (req.method === 'GET') {
     const mode      = req.query['hub.mode'];
     const token     = req.query['hub.verify_token'];
@@ -113,14 +126,14 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: 'Verification failed' });
   }
 
-  // ── Webhook Payload (POST from Meta) ─────────────────────
+  // -- Webhook Payload (POST from Meta) ------------------------
   if (req.method === 'POST') {
     // Read raw body bytes for HMAC verification (bodyParser is disabled)
     const rawBodyBuffer = await getRawBody(req);
     const sigHeader     = req.headers['x-hub-signature-256'];
 
     if (!verifySignature(rawBodyBuffer, sigHeader)) {
-      console.warn('Webhook signature mismatch — request rejected');
+      console.warn('Webhook signature mismatch - request rejected');
       return res.status(403).json({ error: 'Invalid signature' });
     }
 
@@ -146,8 +159,8 @@ export default async function handler(req, res) {
         const campaign  = String(leadData.form_name || leadData.campaign_name || 'Meta Ads');
 
         try {
-          // Fetch real contact details via Graph API
-          const graphLead = await fetchLeadFromMeta(leadgenId);
+          // Fetch real contact details via Graph API (per-page token)
+          const graphLead = await fetchLeadFromMeta(leadgenId, pageId);
 
           let firstName, lastName, phone, email, city, fieldData;
 
@@ -182,7 +195,7 @@ export default async function handler(req, res) {
             JSON.stringify(fieldData),
           ]);
 
-          console.log(`Lead ingested: ${leadgenId} — ${name}`);
+          console.log(`Lead ingested: ${leadgenId} - ${name}`);
         } catch (err) {
           console.error(`Failed to process lead ${leadgenId}:`, err);
         }
