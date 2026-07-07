@@ -6,14 +6,29 @@ module.exports = async (req, res) => {
     return res.redirect(`/?error=${encodeURIComponent(error)}#dashboard`);
   }
 
-  if (!code) {
-    return res.status(400).send('Missing code parameter');
-  }
-
   const APP_ID     = process.env.META_APP_ID     || '2464733710694215';
   const APP_SECRET = process.env.META_APP_SECRET || '';
   const REDIRECT   = 'https://fwl-crm.vercel.app/api/oauth';
   const PAGE_ID    = '101448221738798'; // Earney Digital Service Solutions
+
+  // No code = initiate the OAuth flow
+  if (!code) {
+    const scopes = [
+      'pages_show_list',
+      'pages_read_engagement',
+      'leads_retrieval',
+      'ads_management',
+      'business_management',
+    ].join(',');
+    const loginUrl =
+      `https://www.facebook.com/v20.0/dialog/oauth` +
+      `?client_id=${APP_ID}` +
+      `&redirect_uri=${encodeURIComponent(REDIRECT)}` +
+      `&scope=${encodeURIComponent(scopes)}` +
+      `&response_type=code` +
+      `&state=fwlcrm_oauth`;
+    return res.redirect(loginUrl);
+  }
 
   try {
     // 1. Exchange code for User Access Token
