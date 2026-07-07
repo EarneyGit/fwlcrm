@@ -23,8 +23,8 @@ LP.pages.leads = (() => {
   }
 
   function sourceBadge(source) {
-    if (source === 'instagram') return '<span class="badge badge-ig">IG</span>';
-    return '<span class="badge badge-fb">FB</span>';
+    if (source === 'instagram') return `<span class="badge badge-ig" style="padding:2px 6px"><img src="/icons/instagram.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> IG</span>`;
+    return `<span class="badge badge-fb" style="padding:2px 6px"><img src="/icons/facebook.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> FB</span>`;
   }
 
   function statusBadge(status) {

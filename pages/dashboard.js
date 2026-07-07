@@ -12,8 +12,8 @@ LP.pages.dashboard = (() => {
   let slaTimer = null;
 
   function sourceBadge(source) {
-    if (source === 'instagram') return '<span class="badge badge-ig" style="font-size:10px">IG</span>';
-    return '<span class="badge badge-fb" style="font-size:10px">FB</span>';
+    if (source === 'instagram') return `<span class="badge badge-ig" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px"><img src="/icons/instagram.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> IG</span>`;
+    return `<span class="badge badge-fb" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px"><img src="/icons/facebook.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> FB</span>`;
   }
 
   function renderKPIs() {
@@ -171,12 +171,12 @@ LP.pages.dashboard = (() => {
           </svg>
           <div class="donut-legend">
             <div class="legend-item">
-              <div class="legend-dot" style="background:#1877F2"></div>
+              <img src="/icons/facebook.png" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0">
               <div class="legend-label">Facebook</div>
               <div class="legend-value tabular-nums">${LP.utils.formatNumber(fbCount)} <span style="color:var(--text-3);font-weight:400">(${fbPct}%)</span></div>
             </div>
             <div class="legend-item">
-              <div class="legend-dot" style="background:#D946EF"></div>
+              <img src="/icons/instagram.png" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0">
               <div class="legend-label">Instagram</div>
               <div class="legend-value tabular-nums">${LP.utils.formatNumber(igCount)} <span style="color:var(--text-3);font-weight:400">(${igPct}%)</span></div>
             </div>

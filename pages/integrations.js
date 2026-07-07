@@ -42,10 +42,10 @@ LP.pages.integrations = (() => {
         <div class="card">
           <div class="card-header">
             <div>
-              <div class="card-title" style="display:flex;align-items:center;gap:6px">
-                ${LP.icons.get('book-open', 'icon-sm')} Meta OAuth 2.0 Connection
+              <div class="card-title" style="display:flex;align-items:center;gap:8px">
+                <img src="/icons/facebook.png" style="width:18px;height:18px;object-fit:contain;border-radius:3px"> Meta OAuth 2.0 Connection
               </div>
-              <div class="card-subtitle">Connect Facebook & Instagram Lead Ads</div>
+              <div class="card-subtitle">Connect Facebook &amp; Instagram Lead Ads</div>
             </div>
             <span class="badge badge-success">● Active</span>
           </div>
@@ -263,10 +263,13 @@ LP.pages.integrations = (() => {
           <div class="card-subtitle">Push leads to client CRMs, telephony, and messaging</div>
         </div>
         <div class="grid-3">
-          ${[
+        ${[
             { name:'Zoho CRM',        icon: LP.icons.get('bar-chart-3', 'icon-md'), desc:'Native 2-way sync',                    status:'connected', color:'#E42527' },
             { name:'HubSpot',         icon: LP.icons.get('circle-dot', 'icon-md'), desc:'Lead + deal creation',                 status:'connected', color:'#FF7A59' },
-            { name:'WhatsApp Cloud',  icon: LP.icons.get('message-circle', 'icon-md'), desc:'DLT-approved templates (ta-IN)',       status:'connected', color:'#25D366' },
+            { name:'WhatsApp Cloud',  icon: '<img src="/icons/whatsapp.png" style="width:22px;height:22px;object-fit:contain">', desc:'DLT-approved templates (ta-IN)',       status:'connected', color:'#25D366' },
+            { name:'Facebook Ads',    icon: '<img src="/icons/facebook.png" style="width:22px;height:22px;object-fit:contain;border-radius:4px">', desc:'Lead forms & Pixel integration',     status:'connected', color:'#1877F2' },
+            { name:'Instagram Ads',   icon: '<img src="/icons/instagram.png" style="width:22px;height:22px;object-fit:contain;border-radius:4px">', desc:'Story & feed lead forms',           status:'connected', color:'#D946EF' },
+            { name:'Messenger',       icon: '<img src="/icons/messenger.png" style="width:22px;height:22px;object-fit:contain;border-radius:4px">', desc:'Messenger lead gen forms',          status:'inactive',  color:'#0084FF' },
             { name:'Exotel',          icon: LP.icons.get('phone', 'icon-md'), desc:'Click-to-call, IVR, recording',        status:'connected', color:'#FF6B35' },
             { name:'Knowlarity',      icon: LP.icons.get('phone', 'icon-md'),  desc:'IVR + virtual numbers',               status:'inactive',  color:'#6C47FF' },
             { name:'MSG91 SMS',       icon: LP.icons.get('message-circle', 'icon-md'), desc:'WhatsApp fallback + OTP',              status:'connected', color:'#1877F2' },

@@ -26,8 +26,8 @@ LP.drawer = (() => {
   }
 
   function sourceBadge(source) {
-    if (source === 'instagram') return '<span class="badge badge-ig">IG</span>';
-    return '<span class="badge badge-fb">FB</span>';
+    if (source === 'instagram') return `<span class="badge badge-ig" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px"><img src="/icons/instagram.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> IG</span>`;
+    return `<span class="badge badge-fb" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px"><img src="/icons/facebook.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> FB</span>`;
   }
 
   function statusBadge(status) {
@@ -101,8 +101,8 @@ LP.drawer = (() => {
         <div class="drawer-section">
           <div class="drawer-section-title">Quick Actions</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-success btn-sm" id="wa-btn" style="display:flex;align-items:center;gap:4px">
-              ${get('message-circle', 'icon-sm')} WhatsApp
+            <button class="btn btn-success btn-sm" id="wa-btn" style="display:flex;align-items:center;gap:5px">
+              <img src="/icons/whatsapp.png" style="width:15px;height:15px;object-fit:contain;border-radius:2px"> WhatsApp
             </button>
             <button class="btn btn-secondary btn-sm" id="call-btn" style="display:flex;align-items:center;gap:4px">
               ${get('phone', 'icon-sm')} Call Exotel
