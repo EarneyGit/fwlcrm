@@ -1,36 +1,94 @@
 // ============================================================
-// FWL CRM CRM — Reports Page
+// FWL CRM — Reports Page (fully data-driven, no fake numbers)
 // ============================================================
 
 window.LP = window.LP || {};
 LP.pages = LP.pages || {};
 
 LP.pages.reports = (() => {
+  // Compute last 7 days lead volume from LP.data.leads
+  function getLast7Days() {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString('en-IN', { weekday: 'short' });
+      const dateStr = d.toISOString().slice(0, 10);
+      const count = (LP.data.leads || []).filter(l => {
+        const ld = new Date(l.createdAt || l.created_at);
+        return ld.toISOString().slice(0, 10) === dateStr;
+      }).length;
+      days.push({ label, count });
+    }
+    return days;
+  }
+
+  function getPipelineBreakdown() {
+    const leads = LP.data.leads || [];
+    const total = leads.length;
+    const statuses = ['new', 'contacted', 'qualified', 'converted', 'lost'];
+    const colors = {
+      new: '#0EA5E9', contacted: '#F59E0B', qualified: '#8B5CF6',
+      converted: '#10B981', lost: '#EF4444'
+    };
+    return statuses.map(s => ({
+      label: s.charAt(0).toUpperCase() + s.slice(1),
+      count: leads.filter(l => l.status === s).length,
+      pct: total > 0 ? Math.round((leads.filter(l => l.status === s).length / total) * 100) : 0,
+      color: colors[s]
+    }));
+  }
+
+  function getSourceBreakdown() {
+    const leads = LP.data.leads || [];
+    const fb = leads.filter(l => l.source === 'facebook').length;
+    const ig = leads.filter(l => l.source === 'instagram').length;
+    const total = fb + ig || 1;
+    return [
+      { label: 'Facebook', count: fb, pct: Math.round(fb / total * 100), color: '#1877F2' },
+      { label: 'Instagram', count: ig, pct: Math.round(ig / total * 100), color: '#D946EF' }
+    ];
+  }
+
   function render() {
+    const s = LP.data.stats;
+    const leads = LP.data.leads || [];
+    const total = leads.length;
+
+    // Compute real KPI values
+    const qualifiedCount = leads.filter(l => l.status === 'qualified' || l.status === 'converted').length;
+    const qualRate = total > 0 ? ((qualifiedCount / total) * 100).toFixed(1) : '0.0';
+    const avgResponseMin = s ? Math.round(s.avgResponse / 60) : 0;
+    const avgCPL = s ? Math.round(s.avgCPL) : 0;
+    const days = getLast7Days();
+    const maxDay = Math.max(...days.map(d => d.count), 1);
+    const pipeline = getPipelineBreakdown();
+    const sources = getSourceBreakdown();
+
+    const isEmpty = total === 0;
+
     return `
       <div class="page-header">
         <div>
           <h1 class="page-title">Performance Reports</h1>
-          <div class="page-subtitle">Agency-wide Meta Lead Ads metrics and SLA performance</div>
+          <div class="page-subtitle">Live metrics from your Meta Lead Ads — Earney Digital Service Solutions</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
-          <select class="form-select" style="width:160px;padding:6px 28px 6px 10px;font-size:12px">
-            <option>Last 7 Days</option>
-            <option>Last 30 Days</option>
-            <option>This Month</option>
-          </select>
-          <button class="btn btn-primary btn-sm">Download PDF</button>
+          <div class="live-pill" style="font-size:10px;padding:3px 8px"><div class="live-dot"></div> LIVE DATA</div>
         </div>
       </div>
 
-      <div class="kpi-grid">
+      <!-- KPI Cards -->
+      <div class="kpi-grid" style="margin-bottom:24px">
         <div class="kpi-card" style="--kpi-color:var(--meta)">
           <div class="kpi-icon" style="--kpi-icon-bg:var(--meta-dim);color:var(--meta)">
             <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
-          <div class="kpi-label">Total Leads Generated</div>
-          <div class="kpi-value">1,482</div>
-          <div class="kpi-delta up"><svg width="12" height="12" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6" stroke="currentColor" fill="none" stroke-width="2"/></svg> 12% vs last period</div>
+          <div class="kpi-label">Total Leads</div>
+          <div class="kpi-value tabular-nums">${LP.utils.formatNumber(total)}</div>
+          <div class="kpi-delta ${s && s.leadsToday > 0 ? 'up' : 'up'}">
+            +${s ? s.leadsToday : 0} today
+          </div>
         </div>
 
         <div class="kpi-card" style="--kpi-color:var(--success)">
@@ -38,8 +96,8 @@ LP.pages.reports = (() => {
             <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
           <div class="kpi-label">Qualification Rate</div>
-          <div class="kpi-value">42.8%</div>
-          <div class="kpi-delta up"><svg width="12" height="12" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6" stroke="currentColor" fill="none" stroke-width="2"/></svg> 3.4% vs last period</div>
+          <div class="kpi-value tabular-nums">${isEmpty ? '—' : qualRate + '%'}</div>
+          <div class="kpi-delta up">${qualifiedCount} qualified leads</div>
         </div>
 
         <div class="kpi-card" style="--kpi-color:var(--danger)">
@@ -47,56 +105,135 @@ LP.pages.reports = (() => {
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
           <div class="kpi-label">Avg. Response Time</div>
-          <div class="kpi-value">14m</div>
-          <div class="kpi-delta down"><svg width="12" height="12" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" stroke="currentColor" fill="none" stroke-width="2"/></svg> 2m slower</div>
+          <div class="kpi-value tabular-nums">${isEmpty ? '—' : (avgResponseMin < 1 ? '<1m' : avgResponseMin + 'm')}</div>
+          <div class="kpi-delta up">From lead arrival to contact</div>
         </div>
 
         <div class="kpi-card" style="--kpi-color:var(--amber)">
           <div class="kpi-icon" style="--kpi-icon-bg:var(--amber-dim);color:var(--amber)">
             <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           </div>
-          <div class="kpi-label">Est. Cost Per Lead (CPL)</div>
-          <div class="kpi-value">₹145.50</div>
-          <div class="kpi-delta up"><svg width="12" height="12" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" stroke="currentColor" fill="none" stroke-width="2"/></svg> ₹12 cheaper</div>
+          <div class="kpi-label">Avg Cost Per Lead (CPL)</div>
+          <div class="kpi-value tabular-nums">${isEmpty || avgCPL === 0 ? '—' : '₹' + LP.utils.formatNumber(avgCPL)}</div>
+          <div class="kpi-delta up">Tracked per client campaign</div>
         </div>
       </div>
 
-      <div class="grid-2">
+      <div class="grid-2" style="margin-bottom:24px">
+        <!-- Pipeline Breakdown -->
         <div class="card">
           <div class="card-header">
             <div>
               <div class="card-title">Leads by Status</div>
-              <div class="card-subtitle">Pipeline breakdown across all clients</div>
+              <div class="card-subtitle">Pipeline breakdown — all time</div>
             </div>
+            <span class="badge badge-neutral" style="font-size:10px">${total} total</span>
           </div>
-          <div style="height:250px;display:flex;align-items:center;justify-content:center;color:var(--text-3);border:1px dashed var(--border-1);border-radius:var(--radius-sm)">
-            <div style="text-align:center">
-              <svg viewBox="0 0 24 24" style="width:32px;height:32px;stroke:currentColor;fill:none;opacity:0.5;margin-bottom:8px"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>
-              <div>Chart rendering engine ready</div>
+          ${isEmpty ? `
+            <div class="empty-state" style="height:200px;border:none;background:transparent">
+              ${LP.icons.get('pie-chart', 'icon-lg')}
+              <div style="margin-top:12px;font-weight:500;color:var(--text-2)">No leads yet</div>
+              <div style="font-size:12px">Submit a test lead via Meta Lead Ads Testing Tool</div>
             </div>
-          </div>
+          ` : `
+            <div style="display:flex;flex-direction:column;gap:10px">
+              ${pipeline.map(p => `
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+                    <span style="font-weight:500;color:${p.color}">${p.label}</span>
+                    <span class="tabular-nums" style="color:var(--text-3)">${p.count} (${p.pct}%)</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width:${p.pct}%;background:${p.color}"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
         </div>
 
+        <!-- Source Breakdown -->
         <div class="card">
           <div class="card-header">
             <div>
-              <div class="card-title">Volume Over Time</div>
-              <div class="card-subtitle">Daily lead velocity</div>
+              <div class="card-title">Lead Source Split</div>
+              <div class="card-subtitle">Facebook vs Instagram</div>
             </div>
           </div>
-          <div style="height:250px;display:flex;align-items:flex-end;gap:12px;padding:20px;background:var(--surface-2);border-radius:var(--radius-sm)">
-            <!-- Fake bar chart -->
-            <div style="flex:1;background:var(--meta);height:40%;border-radius:4px 4px 0 0;opacity:0.8"></div>
-            <div style="flex:1;background:var(--meta);height:60%;border-radius:4px 4px 0 0;opacity:0.8"></div>
-            <div style="flex:1;background:var(--meta);height:30%;border-radius:4px 4px 0 0;opacity:0.8"></div>
-            <div style="flex:1;background:var(--meta);height:80%;border-radius:4px 4px 0 0;opacity:0.8"></div>
-            <div style="flex:1;background:var(--meta);height:50%;border-radius:4px 4px 0 0;opacity:0.8"></div>
-            <div style="flex:1;background:var(--meta);height:90%;border-radius:4px 4px 0 0;opacity:0.8"></div>
-            <div style="flex:1;background:var(--meta);height:100%;border-radius:4px 4px 0 0;opacity:0.8"></div>
-          </div>
+          ${isEmpty ? `
+            <div class="empty-state" style="height:200px;border:none;background:transparent">
+              ${LP.icons.get('bar-chart-3', 'icon-lg')}
+              <div style="margin-top:12px;font-weight:500;color:var(--text-2)">No source data yet</div>
+            </div>
+          ` : `
+            <div style="display:flex;flex-direction:column;gap:10px">
+              ${sources.map(src => `
+                <div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <div style="width:10px;height:10px;border-radius:2px;background:${src.color}"></div>
+                      <span style="font-weight:500">${src.label}</span>
+                    </div>
+                    <span class="tabular-nums" style="color:var(--text-3)">${src.count} (${src.pct}%)</span>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-fill" style="width:${src.pct}%;background:${src.color}"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+            <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+              <div style="display:flex;gap:16px">
+                ${sources.map(src => `
+                  <div style="flex:1;text-align:center;padding:12px;background:var(--surface-2);border-radius:8px">
+                    <div style="font-size:20px;font-weight:700;color:${src.color}" class="tabular-nums">${src.count}</div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:2px">${src.label}</div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `}
         </div>
       </div>
+
+      <!-- Volume Over Time — Last 7 Days -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Lead Volume — Last 7 Days</div>
+            <div class="card-subtitle">Daily lead arrivals via Meta webhook</div>
+          </div>
+          <span class="badge badge-neutral" style="font-size:10px">
+            ${days.reduce((a,b) => a + b.count, 0)} leads this week
+          </span>
+        </div>
+        ${days.every(d => d.count === 0) ? `
+          <div class="empty-state" style="height:160px;border:none;background:transparent">
+            ${LP.icons.get('activity', 'icon-lg')}
+            <div style="margin-top:12px;font-weight:500;color:var(--text-2)">No leads in the last 7 days</div>
+            <div style="font-size:12px">Use Meta Lead Ads Testing Tool to send your first live lead</div>
+          </div>
+        ` : `
+          <div style="display:flex;align-items:flex-end;gap:8px;padding:12px 0;height:160px">
+            ${days.map(d => `
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px">
+                <span style="font-size:10px;font-weight:600;color:var(--text-2)" class="tabular-nums">${d.count > 0 ? d.count : ''}</span>
+                <div style="width:100%;background:var(--meta);border-radius:4px 4px 0 0;transition:height 0.4s;min-height:${d.count > 0 ? 4 : 0}px;height:${Math.max(d.count/maxDay*120, d.count > 0 ? 4 : 0)}px;opacity:0.85"></div>
+                <span style="font-size:10px;color:var(--text-3)">${d.label}</span>
+              </div>
+            `).join('')}
+          </div>
+        `}
+      </div>
     `;
+  }
+
+  function renderTable() {
+    const content = document.getElementById('page-content');
+    if (content && LP.router.current === 'calendar') return; // safety
+    if (content && LP.router.current === 'reports') {
+      content.innerHTML = render();
+    }
   }
 
   function init(container) {
@@ -104,9 +241,7 @@ LP.pages.reports = (() => {
     container.classList.add('fade-in');
   }
 
-  function destroy() {
-    // cleanup if needed
-  }
+  function destroy() {}
 
-  return { render, init, destroy };
+  return { render, init, destroy, renderTable };
 })();

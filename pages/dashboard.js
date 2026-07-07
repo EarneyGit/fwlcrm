@@ -49,7 +49,7 @@ LP.pages.dashboard = (() => {
           <div class="kpi-icon" style="color:#10B981">${get('badge-indian-rupee', 'icon-md')}</div>
           <div class="kpi-value tabular-nums" id="kpi-cpl">${formatCurrency(s.avgCPL)}</div>
           <div class="kpi-label">Avg Cost Per Lead</div>
-          <div class="kpi-delta up">↓ ₹80 vs yesterday (CAPI effect)</div>
+          <div class="kpi-delta up">${s.avgCPL > 0 ? 'Updated via real leads' : 'Will track once leads arrive'}</div>
           <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40">
             <polyline points="0,10 15,15 30,12 45,20 60,25 75,30" fill="none" stroke="#10B981" stroke-width="2"/>
           </svg>
@@ -58,7 +58,7 @@ LP.pages.dashboard = (() => {
           <div class="kpi-icon" style="color:#F59E0B">${get('clock', 'icon-md')}</div>
           <div class="kpi-value tabular-nums" id="kpi-rt">${LP.utils.formatDuration(s.avgResponse)}</div>
           <div class="kpi-label">Avg Response Time</div>
-          <div class="kpi-delta up">↓ 1.9 min vs yesterday</div>
+          <div class="kpi-delta up">${s.avgResponse > 0 ? 'Avg across all leads' : 'Tracked from first contact'}</div>
           <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40">
             <polyline points="0,8 15,18 30,14 45,25 60,20 75,15" fill="none" stroke="#F59E0B" stroke-width="2"/>
           </svg>
@@ -67,7 +67,7 @@ LP.pages.dashboard = (() => {
           <div class="kpi-icon" style="color:#6C47FF">${get('bar-chart-3', 'icon-md')}</div>
           <div class="kpi-value tabular-nums" id="kpi-conv">${s.convRate || '0%'}</div>
           <div class="kpi-label">Conversion Rate</div>
-          <div class="kpi-delta up">↑ 0.9% vs last week</div>
+          <div class="kpi-delta up">${s.wonTotal > 0 ? s.wonTotal + ' converted deals' : 'Will track conversions'}</div>
           <svg class="kpi-sparkline" width="80" height="40" viewBox="0 0 80 40">
             <polyline points="0,30 15,25 30,28 45,18 60,14 75,10" fill="none" stroke="#6C47FF" stroke-width="2"/>
           </svg>
@@ -256,8 +256,8 @@ LP.pages.dashboard = (() => {
     return `
       <div class="page-header">
         <div>
-          <h1 class="page-title gradient-text">Good morning, Agency 👋</h1>
-          <div class="page-subtitle">Here's what's happening with your Chennai campaigns right now</div>
+          <h1 class="page-title gradient-text">Good morning, Kawin 👋</h1>
+          <div class="page-subtitle">Here's what's happening with your Earney campaigns right now</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
           <div class="live-pill">
@@ -329,19 +329,19 @@ LP.pages.dashboard = (() => {
             <div style="font-size:12.5px;color:var(--text-2);line-height:1.8">
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
                 <span>Total received (all time)</span>
-                <strong class="text-meta tabular-nums">4,892</strong>
+                <strong class="text-meta tabular-nums">${LP.utils.formatNumber(LP.data.stats ? LP.data.stats.totalLeads : 0)}</strong>
               </div>
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
-                <span>Last ping</span>
-                <strong>Just now</strong>
+                <span>Webhook URL</span>
+                <strong style="font-size:10px;color:var(--text-3)">fwl-crm.vercel.app/api/webhook</strong>
               </div>
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
                 <span>Failed (24h)</span>
                 <strong class="text-success tabular-nums">0</strong>
               </div>
               <div class="flex-between" style="padding:4px 0">
-                <span>Avg processing time</span>
-                <strong class="tabular-nums">2.1s</strong>
+                <span>Status</span>
+                <strong class="text-success">● Active</strong>
               </div>
             </div>
           </div>
@@ -355,16 +355,16 @@ LP.pages.dashboard = (() => {
             </div>
             <div style="font-size:12.5px;color:var(--text-2);line-height:1.8">
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
-                <span>Events pushed today</span>
-                <strong class="text-meta tabular-nums">47</strong>
+                <span>Pixel ID</span>
+                <strong class="text-meta tabular-nums" style="font-size:10px">1116116109133710</strong>
               </div>
               <div class="flex-between" style="padding:4px 0;border-bottom:1px solid var(--border)">
-                <span>CPL reduction</span>
-                <strong class="text-success tabular-nums">↓ 28%</strong>
+                <span>Events fired today</span>
+                <strong class="tabular-nums">${LP.data.stats ? LP.data.stats.leadsToday : 0}</strong>
               </div>
               <div class="flex-between" style="padding:4px 0">
-                <span>Match rate</span>
-                <strong class="tabular-nums">84.2%</strong>
+                <span>Status</span>
+                <strong class="text-success">● Verified &amp; Active</strong>
               </div>
             </div>
           </div>

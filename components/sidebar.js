@@ -63,10 +63,10 @@ LP.sidebar = (() => {
 
       <div class="sidebar-footer">
         <div class="sidebar-user">
-          <div class="user-avatar">AR</div>
+          <div class="user-avatar" style="background:linear-gradient(135deg,#1877F2,#6C47FF)">KW</div>
           <div class="user-info">
-            <div class="user-name">Agency Owner</div>
-            <div class="user-role">Owner · Chennai</div>
+            <div class="user-name">Kawin</div>
+            <div class="user-role">Owner · Earney</div>
           </div>
         </div>
       </div>

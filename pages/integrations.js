@@ -226,9 +226,8 @@ LP.pages.integrations = (() => {
           <div class="divider"></div>
           <div class="drawer-section-title">Events Sent (Last 24h)</div>
           ${[
-            { event: 'Lead',      count: 128, match: '82%' },
-            { event: 'Qualified', count: 47,  match: '91%' },
-            { event: 'Purchase',  count: 12,  match: '88%' },
+            { event: 'Lead',      count: LP.data.stats ? LP.data.stats.leadsToday : 0,   match: '—' },
+            { event: 'Converted', count: LP.data.stats ? LP.data.stats.wonTotal  : 0,    match: '—' },
           ].map(e => `
             <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px">
               <span style="color:var(--text-2)">${e.event}</span>
@@ -242,8 +241,8 @@ LP.pages.integrations = (() => {
           <div style="margin-top:14px">
             <div class="form-label">Pixel ID</div>
             <div class="webhook-url">
-              <span class="mono">1234567890123456</span>
-              <button class="btn btn-ghost btn-sm" style="display:flex;align-items:center" onclick="copyToClipboard('1234567890123456')">${LP.icons.get('copy', 'icon-sm')}</button>
+              <span class="mono">1116116109133710</span>
+              <button class="btn btn-ghost btn-sm" style="display:flex;align-items:center" onclick="copyToClipboard('1116116109133710')">${LP.icons.get('copy', 'icon-sm')}</button>
             </div>
           </div>
 
