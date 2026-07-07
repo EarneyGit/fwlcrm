@@ -17,6 +17,7 @@ module.exports = async (req, res) => {
       'pages_show_list',
       'pages_read_engagement',
       'leads_retrieval',
+      'pages_manage_ads',
       'ads_management',
       'business_management',
     ].join(',');
