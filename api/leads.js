@@ -29,17 +29,38 @@ export default async function handler(req, res) {
       const { rows } = await db.query(query);
       
       const leads = rows.map(r => {
-        const initials = r.first_name && r.last_name 
-          ? (r.first_name[0] + r.last_name[0]).toUpperCase()
-          : 'L';
+        // Sanitize names: Meta test leads use <test lead: dummy data> format
+        // which breaks innerHTML rendering. Strip angle-bracket wrapped values.
+        const sanitizeName = (val) => {
+          if (!val) return '';
+          // If value looks like an HTML tag placeholder, return empty string
+          if (/^<[^>]+>$/.test(val.trim())) return '';
+          // Escape any remaining angle brackets
+          return val.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        };
+
+        const rawFirst = r.first_name || '';
+        const rawLast  = r.last_name  || '';
+        const rawName  = r.name       || '';
+
+        const cleanFirst = sanitizeName(rawFirst);
+        const cleanLast  = sanitizeName(rawLast);
+        const cleanName  = sanitizeName(rawName) || cleanFirst || 'Test Lead';
+
+        const initials = cleanFirst && cleanLast
+          ? (cleanFirst[0] + cleanLast[0]).toUpperCase()
+          : cleanFirst
+            ? cleanFirst[0].toUpperCase()
+            : cleanName[0]?.toUpperCase() || 'TL';
+
         return {
           id: r.id,
           leadgenId: r.leadgen_id,
-          name: r.name,
-          firstName: r.first_name,
-          lastName: r.last_name,
-          phone: r.phone,
-          email: r.email,
+          name: cleanName,
+          firstName: cleanFirst,
+          lastName: cleanLast,
+          phone: sanitizeName(r.phone),
+          email: sanitizeName(r.email),
           city: r.city,
           status: r.status,
           source: r.source,
@@ -58,6 +79,7 @@ export default async function handler(req, res) {
           initials
         };
       });
+
       res.status(200).json(leads);
     } catch (err) {
       console.error(err);

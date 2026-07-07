@@ -1295,9 +1295,12 @@ img { max-width: 100%; display: block; }
 .live-feed {
   display: flex;
   flex-direction: column;
+  gap: 0;
   max-height: 360px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
+
 
 .feed-item {
   display: flex;
@@ -1308,8 +1311,11 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
   transition: background var(--duration-fast);
   animation: feed-slide var(--duration-slow) var(--ease);
-  margin: 0 -8px;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
+
 
 .feed-item:hover { background: var(--surface-2); }
 
