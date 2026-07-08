@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/api/whatsapp-conversations", "destination": "/api/whatsapp?r=conversations" },
+    { "source": "/api/whatsapp-messages", "destination": "/api/whatsapp?r=messages" },
+    { "source": "/api/whatsapp-templates", "destination": "/api/whatsapp?r=templates" },
+    { "source": "/api/whatsapp-settings", "destination": "/api/whatsapp?r=settings" },
+    { "source": "/api/followups", "destination": "/api/whatsapp?r=followups" },
+    { "source": "/api/analytics-whatsapp", "destination": "/api/whatsapp?r=analytics" }
+  ]
+}

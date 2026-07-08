@@ -1,5 +1,5 @@
 const db = require('./_db');
-const { sendCapiEvent, STATUS_EVENT_MAP } = require('./capi');
+const { sendCapiEvent, STATUS_EVENT_MAP } = require('./_capi');
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {

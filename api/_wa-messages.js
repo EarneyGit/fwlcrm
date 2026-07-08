@@ -28,7 +28,7 @@ async function sendToMeta(phoneNumberId, payload, token) {
   return data;
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   await wa.ensureWhatsappSchema();
 
   if (req.method === 'GET') {

@@ -7,7 +7,7 @@
 const db = require('./_db');
 const wa = require('./_whatsapp');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   await wa.ensureWhatsappSchema();
 
   if (req.method === 'GET') {
