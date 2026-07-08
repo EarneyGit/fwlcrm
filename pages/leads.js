@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Leads Inbox Page
+// FWL CRM — Leads Inbox Page
 // Gmail-style table with filters, search, and drawer
 // ============================================================
 

@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Settings Page
+// FWL CRM — Settings Page
 // Agency profile, billing plans, language toggle, audit log
 // ============================================================
 

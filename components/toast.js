@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Toast Notification System
+// FWL CRM — Toast Notification System
 // ============================================================
 
 window.LP = window.LP || {};

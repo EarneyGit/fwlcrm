@@ -120,15 +120,29 @@ export default async function handler(req, res) {
       if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
       
       values.push(id);
-      const query = `UPDATE leads SET ${updates.join(', ')} WHERE id = $${i} RETURNING *`;
+      // Capture previous status for stage history (Batch 4)
+      let prevStatus = null;
+      if (status) {
+        const prev = await db.query('SELECT status FROM leads WHERE id = $1', [id]);
+        prevStatus = prev.rows[0] ? prev.rows[0].status : null;
+      }
+      const query = `UPDATE leads SET ${updates.join(', ')} WHERE id = ${i} RETURNING *`;
       const { rows } = await db.query(query, values);
       
       if (rows.length === 0) return res.status(404).json({ error: 'Lead not found' });
 
+      // Stage history audit (table created by whatsapp migration; ignore if absent)
+      if (status && prevStatus !== status) {
+        db.query(
+          'INSERT INTO lead_stage_history (lead_id, from_status, to_status, changed_by) VALUES ($1,$2,$3,$4)',
+          [id, prevStatus, status, 'CRM']
+        ).catch(() => null);
+      }
+
       // Fire CAPI event if status changed
       if (status && STATUS_EVENT_MAP[status]) {
         const lead = rows[0];
-        const capiExtra = status === 'won'
+        const capiExtra = (status === 'won' || status === 'converted')
           ? { currency: 'INR', value: lead.cpl || '0' }
           : {};
         sendCapiEvent(STATUS_EVENT_MAP[status], lead, capiExtra).catch(() => null);

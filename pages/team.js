@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Team Management Page
+// FWL CRM — Team Management Page
 // Agent assignment and activity tracking
 // ============================================================
 

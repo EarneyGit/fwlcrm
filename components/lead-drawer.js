@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Lead Detail Drawer Component
+// FWL CRM — Lead Detail Drawer Component
 // ============================================================
 
 window.LP = window.LP || {};

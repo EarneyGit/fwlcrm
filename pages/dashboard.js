@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Dashboard Page
+// FWL CRM — Dashboard Page
 // KPIs, live feed, SLA alerts, source breakdown
 // ============================================================
 

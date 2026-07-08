@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Clients Page
+// FWL CRM — Clients Page
 // Multi-tenant client grid with token health indicators
 // ============================================================
 

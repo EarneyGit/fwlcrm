@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Integrations Page
+// FWL CRM — Integrations Page
 // Meta OAuth, Webhook config, CAPI toggles
 // ============================================================
 
@@ -256,6 +256,24 @@ LP.pages.integrations = (() => {
         </div>
       </div>
 
+
+      <!-- WhatsApp Business Platform (Cloud API) -->
+      <div class="card" id="wa-settings-card">
+        <div class="card-header">
+          <div>
+            <div class="card-title" style="display:flex;align-items:center;gap:6px">
+              WhatsApp Business Platform
+              <span class="badge badge-neutral" style="font-size:10px" id="wa-cfg-badge">checking...</span>
+            </div>
+            <div class="card-subtitle">Cloud API webhook, accounts and assignment rules for the WhatsApp Inbox</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="LP.router.navigate('whatsapp')">Open Inbox</button>
+        </div>
+        <div style="padding:14px" id="wa-settings-body">
+          <div class="skeleton" style="height:80px"></div>
+        </div>
+      </div>
+
       <!-- Other integrations -->
       <div class="card">
         <div class="card-header">
@@ -294,10 +312,72 @@ LP.pages.integrations = (() => {
     `;
   }
 
+
+  async function loadWaSettings() {
+    const body = document.getElementById('wa-settings-body');
+    const badge = document.getElementById('wa-cfg-badge');
+    if (!body) return;
+    try {
+      const res = await fetch('/api/whatsapp-settings');
+      const d = await res.json();
+      const ready = d.tokenConfigured && d.appSecretConfigured;
+      if (badge) {
+        badge.textContent = ready ? 'ready' : 'setup needed';
+        badge.className = 'badge ' + (ready ? 'badge-success' : 'badge-neutral');
+      }
+      const agents = LP.data.agents || [];
+      const rows = (d.accounts || []).map(a => `
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px;border:1px solid var(--border-0);border-radius:8px;margin-bottom:6px" data-wa-acct="${a.id}">
+          <strong style="font-size:12px;min-width:120px">${a.displayName || a.id}</strong>
+          <input class="form-input" style="width:170px;font-size:11px" placeholder="phone_number_id" value="${a.phoneNumberId || ''}" data-f="phoneNumberId">
+          <input class="form-input" style="width:150px;font-size:11px" placeholder="waba_id" value="${a.wabaId || ''}" data-f="wabaId">
+          <select class="form-input" style="width:130px;font-size:11px" data-f="assignmentMode">
+            ${['none','default','round_robin'].map(m => '<option value="' + m + '"' + (a.assignmentMode === m ? ' selected' : '') + '>' + m + '</option>').join('')}
+          </select>
+          <select class="form-input" style="width:140px;font-size:11px" data-f="defaultAssignee">
+            <option value="">no default owner</option>
+            ${agents.map(ag => '<option value="' + ag.id + '"' + (a.defaultAssignee === ag.id ? ' selected' : '') + '>' + ag.name + '</option>').join('')}
+          </select>
+          <button class="btn btn-ghost btn-sm" data-wa-save="${a.id}">Save</button>
+        </div>`).join('');
+
+      body.innerHTML = `
+        <div class="detail-row"><div class="detail-label">Webhook URL</div>
+          <div class="detail-value mono" style="font-size:11px">${d.webhookUrl}
+            <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${d.webhookUrl}')">Copy</button>
+          </div></div>
+        <div class="detail-row"><div class="detail-label">Verify token</div>
+          <div class="detail-value">${d.verifyTokenConfigured ? 'configured' : 'missing'} &middot; App secret: ${d.appSecretConfigured ? 'configured' : 'missing'} &middot; WA_TOKEN: ${d.tokenConfigured ? 'configured' : 'missing (sending disabled)'}</div></div>
+        <div class="drawer-section-title" style="margin-top:10px">Accounts &amp; assignment rules</div>
+        ${rows || '<div style="font-size:12px;color:var(--text-3)">No accounts yet - run scripts/migrate-whatsapp.js or save one below after Meta setup.</div>'}
+        <div class="drawer-section-title" style="margin-top:10px">Compliance</div>
+        <div style="font-size:11px;color:var(--text-3);line-height:1.6">
+          ${d.compliance ? Object.values(d.compliance).join('<br>') : ''}
+        </div>`;
+
+      body.querySelectorAll('[data-wa-save]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const row = btn.closest('[data-wa-acct]');
+          const payload = { id: row.dataset.waAcct };
+          row.querySelectorAll('[data-f]').forEach(inp => { payload[inp.dataset.f] = inp.value || null; });
+          const r = await fetch('/api/whatsapp-settings', {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          if (r.ok) LP.toast.success('WhatsApp account saved', payload.id);
+          else LP.toast.warning('Save failed', (await r.json()).error || '');
+        });
+      });
+    } catch (_) {
+      if (body) body.innerHTML = '<div style="font-size:12px;color:var(--text-3)">Failed to load WhatsApp settings</div>';
+    }
+  }
+
   function init(container) {
     container.innerHTML = render();
     container.classList.add('fade-in');
     window.copyToClipboard = copyToClipboard;
+    loadWaSettings();
   }
 
   function destroy() {}

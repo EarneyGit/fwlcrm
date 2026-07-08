@@ -12,6 +12,7 @@ LP.router = (() => {
   const pageMap = {
     dashboard:    LP.pages.dashboard,
     leads:        LP.pages.leads,
+    whatsapp:     LP.pages.whatsapp,
     clients:      LP.pages.clients,
     integrations: LP.pages.integrations,
     settings:     LP.pages.settings,
@@ -23,6 +24,7 @@ LP.router = (() => {
   const pageTitles = {
     dashboard:    'Dashboard',
     leads:        'Leads Inbox',
+    whatsapp:     'WhatsApp Inbox',
     clients:      'Clients',
     integrations: 'Integrations',
     settings:     'Settings',

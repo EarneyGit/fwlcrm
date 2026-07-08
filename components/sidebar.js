@@ -1,5 +1,5 @@
 // ============================================================
-// FWL CRM CRM — Sidebar Component
+// FWL CRM — Sidebar Component
 // ============================================================
 
 window.LP = window.LP || {};
@@ -8,6 +8,7 @@ LP.sidebar = (() => {
   const navItems = [
     { id: 'dashboard',    icon: 'dashboard',    label: 'Dashboard',    badge: null },
     { id: 'leads',        icon: 'inbox',        label: 'Leads',        badge: 'new' },
+    { id: 'whatsapp',     icon: 'message-circle', label: 'WhatsApp',   badge: null },
     { id: 'clients',      icon: 'briefcase',    label: 'Clients',      badge: null },
     { id: 'integrations', icon: 'plug',         label: 'Integrations', badge: null },
     { id: 'team',         icon: 'users',        label: 'Team',         badge: null },

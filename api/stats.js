@@ -13,7 +13,7 @@ export default async function handler(req, res) {
           COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE)                          AS leads_today,
           COUNT(*) FILTER (WHERE created_at >= CURRENT_DATE - INTERVAL '1 day'
                              AND created_at  <  CURRENT_DATE)                         AS leads_yesterday,
-          COUNT(*) FILTER (WHERE status = 'won')                                      AS won_total,
+          COUNT(*) FILTER (WHERE status IN ('won','converted'))                                      AS won_total,
           COUNT(*)                                                                     AS total_leads
         FROM leads
       ),

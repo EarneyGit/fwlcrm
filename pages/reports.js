@@ -236,8 +236,60 @@ LP.pages.reports = (() => {
     }
   }
 
+
+  async function loadWaAnalytics() {
+    const el = document.getElementById('wa-analytics-card');
+    if (!el) return;
+    try {
+      const res = await fetch('/api/analytics-whatsapp');
+      if (!res.ok) throw new Error();
+      const d = await res.json();
+      const fr = d.avgFirstResponseSeconds != null
+        ? LP.utils.formatDuration(d.avgFirstResponseSeconds) : '-';
+      const kpi = (label, val, color) => `
+        <div style="padding:12px;border:1px solid var(--border-0);border-radius:8px;min-width:120px;flex:1">
+          <div style="font-size:11px;color:var(--text-3)">${label}</div>
+          <div style="font-size:20px;font-weight:700;color:${color || 'var(--text-1)'}" class="tabular-nums">${val}</div>
+        </div>`;
+      el.innerHTML = `
+        <div class="card-header"><div>
+          <div class="card-title">WhatsApp Performance</div>
+          <div class="card-subtitle">Conversations, response time and pipeline from the WhatsApp inbox</div>
+        </div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;padding:14px">
+          ${kpi('Conversations', d.totals.conversations)}
+          ${kpi('Open', d.totals.open, 'var(--accent)')}
+          ${kpi('Unread', d.totals.unread, 'var(--warning)')}
+          ${kpi('WA Leads', d.leads.total)}
+          ${kpi('Converted', d.leads.converted, 'var(--success)')}
+          ${kpi('Revenue', LP.utils.formatCurrency(d.leads.revenue), 'var(--success)')}
+          ${kpi('Avg first response', fr)}
+          ${kpi('Overdue follow-ups', d.overdueFollowups, d.overdueFollowups > 0 ? 'var(--danger)' : 'var(--text-1)')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 14px 14px">
+          <div>
+            <div class="drawer-section-title">By owner</div>
+            ${(d.byOwner || []).map(o => `
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border-0)">
+                <span>${o.owner}</span><span class="tabular-nums">${o.conversations} conv &middot; ${o.converted} won</span>
+              </div>`).join('') || '<div style="font-size:12px;color:var(--text-3)">No data</div>'}
+          </div>
+          <div>
+            <div class="drawer-section-title">By client</div>
+            ${(d.byClient || []).map(c => `
+              <div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid var(--border-0)">
+                <span>${c.client || 'Unlinked'}</span><span class="tabular-nums">${c.conversations} conv &middot; ${LP.utils.formatCurrency(c.revenue)}</span>
+              </div>`).join('') || '<div style="font-size:12px;color:var(--text-3)">No data</div>'}
+          </div>
+        </div>`;
+    } catch (_) {
+      el.innerHTML = '<div style="padding:14px;font-size:12px;color:var(--text-3)">WhatsApp analytics unavailable</div>';
+    }
+  }
+
   function init(container) {
-    container.innerHTML = render();
+    container.innerHTML = render() + '<div class="card" id="wa-analytics-card" style="margin-top:16px"><div class="skeleton" style="height:100px;margin:14px"></div></div>';
+    loadWaAnalytics();
     container.classList.add('fade-in');
   }
 
