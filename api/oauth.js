@@ -62,7 +62,26 @@ module.exports = async (req, res) => {
     if (!tokenRes.ok || !tokenData.access_token) {
       return res.status(400).send('Token exchange failed: ' + JSON.stringify(tokenData));
     }
-    const userToken = tokenData.access_token;
+    let userToken = tokenData.access_token;
+
+    // Exchange for a long-lived (~60 day) token and store it so the CRM
+    // can list live ads for manual-lead attribution (uses ads scopes
+    // already granted in this OAuth flow).
+    try {
+      const llRes = await fetch(
+        `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token` +
+        `&client_id=${APP_ID}&client_secret=${APP_SECRET}&fb_exchange_token=${userToken}`
+      );
+      const llData = await llRes.json();
+      if (llRes.ok && llData.access_token) userToken = llData.access_token;
+      await db.query(`CREATE TABLE IF NOT EXISTS app_settings (
+        key VARCHAR(80) PRIMARY KEY, value TEXT, updated_at TIMESTAMPTZ DEFAULT NOW())`);
+      await db.query(
+        `INSERT INTO app_settings (key, value, updated_at) VALUES ('meta_user_token',$1,NOW())
+         ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()`,
+        [userToken]
+      );
+    } catch (e) { console.error('long-lived token store failed:', e.message); }
 
     // 2. Collect page tokens from all three sources
     const foundPages = {}; // pageId -> { name, access_token }

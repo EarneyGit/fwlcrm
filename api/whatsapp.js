@@ -20,6 +20,7 @@ const routes = {
   settings:      require('./_wa-settings'),
   followups:     require('./_wa-followups'),
   analytics:     require('./_wa-analytics'),
+  ads:           require('./_wa-ads'),
 };
 
 export default async function handler(req, res) {

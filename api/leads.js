@@ -87,21 +87,27 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'POST') {
     try {
-      const { name, phone, email, clientId } = req.body;
+      const { name, phone, email, clientId, source, adId, campaign } = req.body;
+      const leadSource = ['whatsapp','manual','referral','phone'].includes(source) ? source : 'manual';
+      const campaignLabel = campaign || (leadSource === 'whatsapp' ? 'Business WhatsApp (manual)' : 'Manual Entry');
       
       const [first, ...rest] = name.split(' ');
       const last = rest.join(' ') || 'Lead';
       
       const insertQuery = `
-        INSERT INTO leads (id, leadgen_id, name, first_name, last_name, phone, email, status, source, client_id, campaign, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'new', 'manual', $8, 'Manual Entry', NOW())
+        INSERT INTO leads (id, leadgen_id, name, first_name, last_name, phone, email, status, source, client_id, campaign, ad_id, created_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'new', $9, $8, $10, $11, NOW())
         RETURNING *
       `;
       
       const id = 'l_manual_' + Date.now();
       const leadgenId = 'manual_' + Date.now();
       
-      const { rows } = await db.query(insertQuery, [id, leadgenId, name, first, last, phone, email, clientId]);
+      const { rows } = await db.query(insertQuery, [id, leadgenId, name, first, last, phone, email, clientId, leadSource, campaignLabel, adId || '']);
+
+      // Signal Meta immediately so hashed-phone matching starts optimizing
+      sendCapiEvent('Lead', rows[0]).catch(() => null);
+
       res.status(201).json(rows[0]);
     } catch (err) {
       console.error(err);

@@ -97,6 +97,12 @@ const SCHEMA_SQL = `
   ALTER TABLE whatsapp_accounts ADD COLUMN IF NOT EXISTS default_assignee VARCHAR(100);
   ALTER TABLE whatsapp_accounts ADD COLUMN IF NOT EXISTS assignment_mode VARCHAR(20) DEFAULT 'none';
 
+  CREATE TABLE IF NOT EXISTS app_settings (
+    key        VARCHAR(80) PRIMARY KEY,
+    value      TEXT,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+  );
+
   ALTER TABLE leads ADD COLUMN IF NOT EXISTS tags TEXT[] DEFAULT '{}';
   ALTER TABLE leads ADD COLUMN IF NOT EXISTS wa_id VARCHAR(30);
   ALTER TABLE leads ADD COLUMN IF NOT EXISTS next_followup_at TIMESTAMPTZ;
@@ -234,6 +240,21 @@ async function logWebhookEvent(source, eventType, payload, processed, errorText)
 }
 
 
+// --- Key/value app settings -----------------------------------
+async function getSetting(key) {
+  try {
+    const { rows } = await db.query('SELECT value FROM app_settings WHERE key = $1', [key]);
+    return rows.length ? rows[0].value : null;
+  } catch (_) { return null; }
+}
+async function setSetting(key, value) {
+  await db.query(
+    `INSERT INTO app_settings (key, value, updated_at) VALUES ($1,$2,NOW())
+     ON CONFLICT (key) DO UPDATE SET value = $2, updated_at = NOW()`,
+    [key, value]
+  );
+}
+
 // --- Assignment rules (Batch 4) -------------------------------
 // Modes on whatsapp_accounts.assignment_mode:
 //   'none'        - leave unassigned
@@ -286,4 +307,6 @@ module.exports = {
   logActivity,
   logWebhookEvent,
   applyAssignment,
+  getSetting,
+  setSetting,
 };

@@ -313,6 +313,21 @@ LP.pages.leads = (() => {
             ${LP.data.clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
           </select>
         </div>
+        <div class="form-group">
+          <label class="form-label">Ad / Campaign (from live ads, optional)</label>
+          <select class="form-select" id="ml-ad">
+            <option value="">Not from an ad / unknown</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lead Source</label>
+          <select class="form-select" id="ml-source">
+            <option value="whatsapp">Business WhatsApp (app number)</option>
+            <option value="manual">Manual / Walk-in</option>
+            <option value="referral">Referral</option>
+            <option value="phone">Phone call</option>
+          </select>
+        </div>
         <div class="modal-actions">
           <button class="btn btn-ghost" id="ml-cancel">Cancel</button>
           <button class="btn btn-primary" id="ml-save">Add Lead</button>
@@ -321,6 +336,24 @@ LP.pages.leads = (() => {
     `;
     document.body.appendChild(overlay);
 
+    // Load live ads for the selected client
+    async function loadAds() {
+      const sel = overlay.querySelector('#ml-ad');
+      const cid = overlay.querySelector('#ml-client').value;
+      sel.innerHTML = '<option value="">Loading live ads...</option>';
+      try {
+        const res = await fetch('/api/meta-ads?clientId=' + encodeURIComponent(cid));
+        const ads = await res.json();
+        if (!res.ok) throw new Error(ads.error || '');
+        sel.innerHTML = '<option value="">Not from an ad / unknown</option>' +
+          ads.map(a => `<option value="${a.adId}" data-campaign="${(a.campaignName || a.adName).replace(/"/g, '&quot;')}">${a.campaignName ? a.campaignName + ' - ' : ''}${a.adName}</option>`).join('');
+      } catch (e) {
+        sel.innerHTML = '<option value="">Ads unavailable (' + (e.message || 'authorize via /api/oauth') + ')</option>';
+      }
+    }
+    loadAds();
+    overlay.querySelector('#ml-client').addEventListener('change', loadAds);
+
     overlay.querySelector('#ml-cancel').addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelector('#ml-save').addEventListener('click', async () => {
@@ -328,6 +361,10 @@ LP.pages.leads = (() => {
       const phone  = overlay.querySelector('#ml-phone').value.trim();
       const email  = overlay.querySelector('#ml-email').value.trim();
       const cid    = overlay.querySelector('#ml-client').value;
+      const source = overlay.querySelector('#ml-source').value;
+      const adSel  = overlay.querySelector('#ml-ad');
+      const adId   = adSel.value || null;
+      const campaign = adId ? (adSel.selectedOptions[0].dataset.campaign || null) : null;
       if (!name || !phone) { LP.toast.warning('Missing fields', 'Name and phone are required'); return; }
       
       const btn = overlay.querySelector('#ml-save');
@@ -335,7 +372,7 @@ LP.pages.leads = (() => {
       btn.disabled = true;
 
       try {
-        await LP.api.addManualLead({ name, phone, email, clientId: cid });
+        await LP.api.addManualLead({ name, phone, email, clientId: cid, source, adId, campaign });
         // Refresh leads from API
         LP.data.leads = await LP.api.getLeads();
         renderTable();
