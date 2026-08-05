@@ -1,13 +1,9 @@
 // Adds the pages with live ads as real clients.
 // account_id = Facebook Page ID (webhook.js resolveClientId matches on this).
 // Run: node scripts/add-live-clients.js
-require('dotenv').config();
-const { Pool } = require('pg');
+const { createPgPool } = require('./_script_env');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const pool = createPgPool();
 
 const clients = [
   {

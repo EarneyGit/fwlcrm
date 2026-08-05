@@ -1,10 +1,9 @@
 // Pull ALL leads from ALL Earney forms and insert into CRM database
 require('dotenv').config();
 const https = require('https');
-const { Pool } = require('pg');
-const { requireEnv } = require('./_script_env');
+const { createPgPool, requireEnv } = require('./_script_env');
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+const pool = createPgPool();
 const PAGE_TOKEN = requireEnv('META_PAGE_ACCESS_TOKEN');
 const PAGE_ID    = requireEnv('META_PAGE_ID');
 

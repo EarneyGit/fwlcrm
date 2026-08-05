@@ -6,14 +6,11 @@
 
 require('dotenv').config();
 const { assertSafeDestructiveRun } = require('./_guard_destructive');
-const { Pool } = require('pg');
+const { createPgPool } = require('./_script_env');
 
 assertSafeDestructiveRun('scripts/clear-demo.js');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const pool = createPgPool();
 
 async function clearAndSeed() {
   console.log('🔌 Connecting to Neon DB...');

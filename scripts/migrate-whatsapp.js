@@ -16,11 +16,8 @@ const match = src.match(/const SCHEMA_SQL = `([\s\S]*?)`;/);
 if (!match) { console.error('Could not extract SCHEMA_SQL from api/_whatsapp.js'); process.exit(1); }
 const SCHEMA_SQL = match[1];
 
-const { Pool } = require('pg');
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
-});
+const { createPgPool } = require('./_script_env');
+const pool = createPgPool();
 
 (async () => {
   console.log('Applying WhatsApp module schema...');

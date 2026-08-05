@@ -1,10 +1,7 @@
 require('dotenv').config();
-const { Pool } = require('pg');
+const { createPgPool } = require('./_script_env');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const pool = createPgPool();
 
 async function migrate() {
   console.log("Adding converted_at and conversion_value to leads table...");
