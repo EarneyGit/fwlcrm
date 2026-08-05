@@ -185,6 +185,18 @@ LP.drawer = (() => {
           <div class="detail-row">
             <div class="detail-label">Google Click Time</div>
             <div class="detail-value" style="font-size:12px">${formatTs(lead.googleClickAt)}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Google Conv Status</div>
+            <div class="detail-value">${lead.googleConversionStatus || '—'}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Google Conv Uploaded</div>
+            <div class="detail-value" style="font-size:12px">${formatTs(lead.googleConversionUploadedAt)}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Google Conv Error</div>
+            <div class="detail-value" style="font-size:12px">${lead.googleConversionError || '—'}</div>
           </div>` : ''}
           <div class="detail-row">
             <div class="detail-label">Lead ID</div>
