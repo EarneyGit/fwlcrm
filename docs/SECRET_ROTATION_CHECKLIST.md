@@ -30,6 +30,9 @@ Use this checklist after removing committed secrets/tokens from source and befor
 - CAPI event attempts still succeed if configured
 - WhatsApp settings/send paths only work when new env is present
 
+## Extended operator runbook
+- See `/home/hackprac8/SafeProjects/business-growth-os/group-reports/FWL_CRM_POST_MERGE_SECRET_ROTATION_AND_VALIDATION_2026-08-05.md` for the full post-merge sequence covering Meta, CAPI, WhatsApp, and write-auth validation.
+
 ## Developer hygiene
 - remove old local `.env` copies
 - remove any token screenshots/snippets from notes or chats
