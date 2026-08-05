@@ -1,5 +1,8 @@
 require('dotenv').config();
+const { assertSafeDestructiveRun } = require('./_guard_destructive');
 const { Pool } = require('pg');
+
+assertSafeDestructiveRun('scripts/init-db.js');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

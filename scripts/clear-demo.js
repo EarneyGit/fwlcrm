@@ -1,10 +1,14 @@
 // ============================================================
 // FWL CRM — Clear Demo Data & Seed Real Production Data
 // Run: node scripts/clear-demo.js
+// Requires ALLOW_DESTRUCTIVE_DB_SCRIPTS=true
 // ============================================================
 
 require('dotenv').config();
+const { assertSafeDestructiveRun } = require('./_guard_destructive');
 const { Pool } = require('pg');
+
+assertSafeDestructiveRun('scripts/clear-demo.js');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,

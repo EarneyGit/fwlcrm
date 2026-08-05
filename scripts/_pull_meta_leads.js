@@ -2,10 +2,11 @@
 require('dotenv').config();
 const https = require('https');
 const { Pool } = require('pg');
+const { requireEnv } = require('./_script_env');
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-const PAGE_TOKEN = 'EAAjBqYlKt0cBRzSVee4ICpcAXhd0Q58EqiE85RlW1R2eMUjKbysEfcQTH1BJotoNXFuC7CdT7EvyM1KfdQKIGtmp1olVzFFx40th0J5NkzvxLmt1x5khmh5Flf3Bj9zrJC5doT6FY8hKGt7pOBMEOJIQRDWLq7teN1eKf0x0IYbQ0iLqdKHbiIzMUkXVv5CxI2HgheXyGCqnAhg4U28ZD';
-const PAGE_ID = '101448221738798';
+const PAGE_TOKEN = requireEnv('META_PAGE_ACCESS_TOKEN');
+const PAGE_ID = requireEnv('META_PAGE_ID');
 
 function get(url) {
   return new Promise((res, rej) => {
