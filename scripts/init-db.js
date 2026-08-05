@@ -1,13 +1,10 @@
 require('dotenv').config();
 const { assertSafeDestructiveRun } = require('./_guard_destructive');
-const { Pool } = require('pg');
+const { createPgPool } = require('./_script_env');
 
 assertSafeDestructiveRun('scripts/init-db.js');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
+const pool = createPgPool();
 
 const clients = [
   { id:'c1', name:'Prestige Builders', industry:'Real Estate', city:'Chennai', color:'#1877F2', icon:'🏠', accountId:'act_1234567890', forms:4, tokenDays:42, status:'connected', leadsToday:18, cpl:870, convRate:4.2, totalLeads:1240, campaigns:6 },

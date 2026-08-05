@@ -1,4 +1,5 @@
 require('dotenv').config();
+const { Pool } = require('pg');
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -13,6 +14,29 @@ function optionalEnv(name, fallback = '') {
   return value && String(value).trim() ? String(value).trim() : fallback;
 }
 
+function getScriptDatabaseUrl() {
+  const raw = optionalEnv('DATABASE_URL');
+  if (!raw) return raw;
+
+  try {
+    const url = new URL(raw);
+    const sslmode = (url.searchParams.get('sslmode') || '').toLowerCase();
+    if (sslmode && ['prefer', 'require', 'verify-ca'].includes(sslmode) && !url.searchParams.has('uselibpqcompat')) {
+      url.searchParams.set('uselibpqcompat', 'true');
+    }
+    return url.toString();
+  } catch (_) {
+    return raw;
+  }
+}
+
+function createPgPool() {
+  return new Pool({
+    connectionString: getScriptDatabaseUrl(),
+    ssl: { rejectUnauthorized: false }
+  });
+}
+
 function maskSecret(value) {
   if (!value) return 'missing';
   const v = String(value);
@@ -23,5 +47,7 @@ function maskSecret(value) {
 module.exports = {
   requireEnv,
   optionalEnv,
+  getScriptDatabaseUrl,
+  createPgPool,
   maskSecret,
 };
