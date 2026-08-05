@@ -1,5 +1,6 @@
 const db = require('./_db');
 const { sendCapiEvent, STATUS_EVENT_MAP } = require('./_capi');
+const { ensureLeadSchema } = require('./_lead_schema');
 
 function sanitizeName(val) {
   if (!val) return '';
@@ -137,6 +138,7 @@ function mapLeadRow(r) {
 }
 
 export default async function handler(req, res) {
+  await ensureLeadSchema();
   if (req.method === 'GET') {
     try {
       const query = `
