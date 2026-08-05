@@ -91,6 +91,7 @@ LP.secure = (() => {
     '/api/followups',
     '/api/analytics-whatsapp',
     '/api/meta-ads',
+    '/api/google-ads',
   ];
   const nativeFetch = window.fetch.bind(window);
 
