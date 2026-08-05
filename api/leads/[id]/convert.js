@@ -2,6 +2,7 @@ const db = require('../../_db');
 const crypto = require('crypto');
 const env = require('../../_env');
 const { uploadGoogleConversion } = require('../../_google_conversions');
+const { ensureLeadSchema } = require('../../_lead_schema');
 
 function sha256(str) {
   return crypto.createHash('sha256').update(str.trim().toLowerCase()).digest('hex');
@@ -74,6 +75,7 @@ async function sendMetaPurchase(lead, value, contentName) {
 }
 
 export default async function handler(req, res) {
+  await ensureLeadSchema();
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
