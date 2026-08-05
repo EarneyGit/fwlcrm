@@ -132,7 +132,7 @@ export default async function handler(req, res) {
         const prev = await db.query('SELECT status FROM leads WHERE id = $1', [id]);
         prevStatus = prev.rows[0] ? prev.rows[0].status : null;
       }
-      const query = `UPDATE leads SET ${updates.join(', ')} WHERE id = ${i} RETURNING *`;
+      const query = `UPDATE leads SET ${updates.join(', ')} WHERE id = $${i} RETURNING *`;
       const { rows } = await db.query(query, values);
       
       if (rows.length === 0) return res.status(404).json({ error: 'Lead not found' });
