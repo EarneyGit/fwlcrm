@@ -9,6 +9,8 @@ async function ensureGoogleAdsSchema() {
   await db.query(`
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS google_customer_id TEXT;
     ALTER TABLE clients ADD COLUMN IF NOT EXISTS google_ads_enabled BOOLEAN DEFAULT FALSE;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS google_conversion_action_id TEXT;
+    ALTER TABLE clients ADD COLUMN IF NOT EXISTS google_conversion_action_name TEXT;
   `);
   schemaEnsured = true;
 }
@@ -21,7 +23,7 @@ async function getClientConfig(clientId) {
   await ensureGoogleAdsSchema();
   if (!clientId) return null;
   const { rows } = await db.query(
-    'SELECT id, name, google_customer_id, google_ads_enabled FROM clients WHERE id = $1 LIMIT 1',
+    'SELECT id, name, google_customer_id, google_ads_enabled, google_conversion_action_id, google_conversion_action_name FROM clients WHERE id = $1 LIMIT 1',
     [clientId]
   );
   return rows[0] || null;
@@ -35,6 +37,8 @@ function getBaseEnvConfig() {
     refreshToken: process.env.GOOGLE_ADS_REFRESH_TOKEN || '',
     loginCustomerId: normalizeCustomerId(process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID || ''),
     defaultCustomerId: normalizeCustomerId(process.env.GOOGLE_ADS_CUSTOMER_ID || ''),
+    defaultConversionActionId: normalizeCustomerId(process.env.GOOGLE_ADS_CONVERSION_ACTION_ID || ''),
+    currencyCode: (process.env.GOOGLE_ADS_CURRENCY_CODE || 'INR').trim() || 'INR',
   };
 }
 
@@ -58,6 +62,16 @@ async function resolveAdsConfig(clientId) {
     customerId,
   };
   config.missing = listMissingConfig(config);
+  return config;
+}
+
+async function resolveConversionConfig(clientId) {
+  const config = await resolveAdsConfig(clientId);
+  config.conversionActionId = normalizeCustomerId((config.client && config.client.google_conversion_action_id) || config.defaultConversionActionId);
+  config.conversionActionName = (config.client && config.client.google_conversion_action_name) || null;
+  if (!config.conversionActionId) {
+    config.missing = [...config.missing, 'GOOGLE_ADS_CONVERSION_ACTION_ID or clients.google_conversion_action_id'];
+  }
   return config;
 }
 
@@ -168,6 +182,10 @@ module.exports = {
   ensureGoogleAdsSchema,
   getClientConfig,
   resolveAdsConfig,
+  resolveConversionConfig,
+  getAccessToken,
   fetchGoogleAdsRows,
   normalizeAds,
+  normalizeCustomerId,
+  GOOGLE_ADS_API_VERSION,
 };
