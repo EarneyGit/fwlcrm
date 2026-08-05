@@ -7,11 +7,11 @@ assertSafeDestructiveRun('scripts/init-db.js');
 const pool = createPgPool();
 
 const clients = [
-  { id:'c1', name:'Prestige Builders', industry:'Real Estate', city:'Chennai', color:'#1877F2', icon:'🏠', accountId:'act_1234567890', forms:4, tokenDays:42, status:'connected', leadsToday:18, cpl:870, convRate:4.2, totalLeads:1240, campaigns:6 },
-  { id:'c2', name:'Velammal Schools', industry:'Education', city:'Chennai', color:'#6C47FF', icon:'🎓', accountId:'act_9876543210', forms:3, tokenDays:8, status:'warning', leadsToday:34, cpl:310, convRate:6.8, totalLeads:2890, campaigns:4 },
-  { id:'c3', name:'Sri Balaji Hospitals', industry:'Healthcare', city:'Coimbatore', color:'#10B981', icon:'🏥', accountId:'act_1122334455', forms:2, tokenDays:55, status:'connected', leadsToday:12, cpl:580, convRate:9.1, totalLeads:890, campaigns:3 },
-  { id:'c4', name:'NxtGen Academy', industry:'EdTech', city:'Madurai', color:'#F59E0B', icon:'💻', accountId:'act_5566778899', forms:5, tokenDays:0, status:'error', leadsToday:0, cpl:420, convRate:3.5, totalLeads:560, campaigns:7 },
-  { id:'c5', name:'Kotak Mahindra Finance', industry:'BFSI', city:'Chennai', color:'#EF4444', icon:'🏦', accountId:'act_6677889900', forms:3, tokenDays:29, status:'connected', leadsToday:22, cpl:1200, convRate:2.1, totalLeads:3100, campaigns:5 },
+  { id:'c1', name:'Prestige Builders', industry:'Real Estate', city:'Chennai', color:'#1877F2', icon:'🏠', accountId:'act_1234567890', googleCustomerId:null, googleAdsEnabled:false, forms:4, tokenDays:42, status:'connected', leadsToday:18, cpl:870, convRate:4.2, totalLeads:1240, campaigns:6 },
+  { id:'c2', name:'Velammal Schools', industry:'Education', city:'Chennai', color:'#6C47FF', icon:'🎓', accountId:'act_9876543210', googleCustomerId:null, googleAdsEnabled:false, forms:3, tokenDays:8, status:'warning', leadsToday:34, cpl:310, convRate:6.8, totalLeads:2890, campaigns:4 },
+  { id:'c3', name:'Sri Balaji Hospitals', industry:'Healthcare', city:'Coimbatore', color:'#10B981', icon:'🏥', accountId:'act_1122334455', googleCustomerId:null, googleAdsEnabled:false, forms:2, tokenDays:55, status:'connected', leadsToday:12, cpl:580, convRate:9.1, totalLeads:890, campaigns:3 },
+  { id:'c4', name:'NxtGen Academy', industry:'EdTech', city:'Madurai', color:'#F59E0B', icon:'💻', accountId:'act_5566778899', googleCustomerId:null, googleAdsEnabled:false, forms:5, tokenDays:0, status:'error', leadsToday:0, cpl:420, convRate:3.5, totalLeads:560, campaigns:7 },
+  { id:'c5', name:'Kotak Mahindra Finance', industry:'BFSI', city:'Chennai', color:'#EF4444', icon:'🏦', accountId:'act_6677889900', googleCustomerId:null, googleAdsEnabled:false, forms:3, tokenDays:29, status:'connected', leadsToday:22, cpl:1200, convRate:2.1, totalLeads:3100, campaigns:5 },
 ];
 
 const agents = [
@@ -117,6 +117,8 @@ async function initDB() {
         color VARCHAR(20),
         icon VARCHAR(20),
         account_id VARCHAR(100),
+        google_customer_id TEXT,
+        google_ads_enabled BOOLEAN DEFAULT FALSE,
         forms INT DEFAULT 0,
         token_days INT DEFAULT 0,
         status VARCHAR(50),
@@ -175,9 +177,9 @@ async function initDB() {
     // Insert clients
     for (const c of clients) {
       await pool.query(`
-        INSERT INTO clients (id, name, industry, city, color, icon, account_id, forms, token_days, status, leads_today, cpl, conv_rate, total_leads, campaigns)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-      `, [c.id, c.name, c.industry, c.city, c.color, c.icon, c.accountId, c.forms, c.tokenDays, c.status, c.leadsToday, c.cpl, c.convRate, c.totalLeads, c.campaigns]);
+        INSERT INTO clients (id, name, industry, city, color, icon, account_id, google_customer_id, google_ads_enabled, forms, token_days, status, leads_today, cpl, conv_rate, total_leads, campaigns)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      `, [c.id, c.name, c.industry, c.city, c.color, c.icon, c.accountId, c.googleCustomerId, c.googleAdsEnabled, c.forms, c.tokenDays, c.status, c.leadsToday, c.cpl, c.convRate, c.totalLeads, c.campaigns]);
     }
     console.log("✅ Clients inserted.");
 

@@ -401,24 +401,43 @@ LP.pages.leads = (() => {
     async function loadAds() {
       const sel = overlay.querySelector('#ml-ad');
       const cid = overlay.querySelector('#ml-client').value;
+      const sourcePlatform = overlay.querySelector('#ml-source-platform').value;
+      if (sourcePlatform !== 'meta' && sourcePlatform !== 'google') {
+        sel.innerHTML = '<option value="">Not from an ad / unknown</option>';
+        return;
+      }
+      const endpoint = sourcePlatform === 'google' ? '/api/google-ads?clientId=' : '/api/meta-ads?clientId=';
       sel.innerHTML = '<option value="">Loading live ads...</option>';
       try {
-        const res = await fetch('/api/meta-ads?clientId=' + encodeURIComponent(cid));
+        const res = await fetch(endpoint + encodeURIComponent(cid));
         const ads = await res.json();
         if (!res.ok) throw new Error(ads.error || '');
         sel.innerHTML = '<option value="">Not from an ad / unknown</option>' +
-          ads.map(a => `<option value="${a.adId}" data-campaign="${(a.campaignName || a.adName).replace(/"/g, '&quot;')}">${a.campaignName ? a.campaignName + ' - ' : ''}${a.adName}</option>`).join('');
+          ads.map(a => `<option value="${a.adId}" data-campaign="${(a.campaignName || a.adName || '').replace(/"/g, '&quot;')}" data-google-campaign-id="${(a.campaignId || '').replace(/"/g, '&quot;')}" data-google-campaign-name="${(a.campaignName || '').replace(/"/g, '&quot;')}" data-google-ad-group-id="${(a.adGroupId || '').replace(/"/g, '&quot;')}" data-google-ad-group-name="${(a.adGroupName || '').replace(/"/g, '&quot;')}" data-google-ad-id="${(a.adId || '').replace(/"/g, '&quot;')}" data-google-ad-name="${(a.adName || '').replace(/"/g, '&quot;')}">${a.campaignName ? a.campaignName + ' - ' : ''}${a.adName}</option>`).join('');
       } catch (e) {
-        sel.innerHTML = '<option value="">Ads unavailable (' + (e.message || 'authorize via /api/oauth') + ')</option>';
+        const helper = sourcePlatform === 'google' ? 'configure Google Ads env + customer ID' : 'authorize via /api/oauth';
+        sel.innerHTML = '<option value="">Ads unavailable (' + (e.message || helper) + ')</option>';
       }
     }
     loadAds();
     overlay.querySelector('#ml-client').addEventListener('change', loadAds);
+    overlay.querySelector('#ml-ad').addEventListener('change', () => {
+      if (overlay.querySelector('#ml-source-platform').value !== 'google') return;
+      const opt = overlay.querySelector('#ml-ad').selectedOptions[0];
+      if (!opt) return;
+      overlay.querySelector('#ml-google-campaign-id').value = opt.dataset.googleCampaignId || '';
+      overlay.querySelector('#ml-google-campaign-name').value = opt.dataset.googleCampaignName || '';
+      overlay.querySelector('#ml-google-ad-group-id').value = opt.dataset.googleAdGroupId || '';
+      overlay.querySelector('#ml-google-ad-group-name').value = opt.dataset.googleAdGroupName || '';
+      overlay.querySelector('#ml-google-ad-id').value = opt.dataset.googleAdId || '';
+      overlay.querySelector('#ml-google-ad-name').value = opt.dataset.googleAdName || '';
+    });
 
     function syncAttributionUI() {
       const platform = overlay.querySelector('#ml-source-platform').value;
       overlay.querySelector('#ml-meta-wrap').style.display = platform === 'meta' ? 'block' : 'none';
       overlay.querySelector('#ml-google-wrap').style.display = platform === 'google' ? 'block' : 'none';
+      loadAds();
     }
     syncAttributionUI();
     overlay.querySelector('#ml-source-platform').addEventListener('change', syncAttributionUI);

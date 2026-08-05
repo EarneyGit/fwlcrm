@@ -13,6 +13,8 @@ export default async function handler(req, res) {
         color: r.color,
         icon: r.icon,
         accountId: r.account_id,
+        googleCustomerId: r.google_customer_id || null,
+        googleAdsEnabled: r.google_ads_enabled === true,
         forms: r.forms,
         tokenDays: r.token_days,
         status: r.status,
