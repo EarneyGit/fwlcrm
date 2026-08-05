@@ -11,6 +11,7 @@ module.exports = async function handler(req, res) {
   await wa.ensureWhatsappSchema();
 
   if (req.method === 'GET') {
+    if (!wa.checkReadAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
     try {
       const { rows } = await db.query(
         'SELECT * FROM whatsapp_templates ORDER BY name ASC'

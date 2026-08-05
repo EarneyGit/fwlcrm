@@ -80,6 +80,67 @@ LP.router = (() => {
   return { navigate, init, get current() { return current; }, pageMap };
 })();
 
+// ─── INTERNAL ROUTE AUTH HELPERS ─────────────────────────
+LP.secure = (() => {
+  const STORAGE_KEY = 'fwlcrm_x_crm_key';
+  const PROTECTED_PREFIXES = [
+    '/api/whatsapp-settings',
+    '/api/whatsapp-conversations',
+    '/api/whatsapp-messages',
+    '/api/whatsapp-templates',
+    '/api/followups',
+    '/api/analytics-whatsapp',
+    '/api/meta-ads',
+  ];
+  const nativeFetch = window.fetch.bind(window);
+
+  function isProtected(input) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    return PROTECTED_PREFIXES.some(prefix => url.startsWith(prefix));
+  }
+
+  function getKey() {
+    try { return localStorage.getItem(STORAGE_KEY) || ''; }
+    catch (_) { return ''; }
+  }
+
+  function setKey(value) {
+    try {
+      if (value && String(value).trim()) localStorage.setItem(STORAGE_KEY, String(value).trim());
+    } catch (_) {}
+  }
+
+  function clearKey() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+  }
+
+  function buildHeaders(existing) {
+    const headers = new Headers(existing || {});
+    const key = getKey();
+    if (key) headers.set('X-CRM-Key', key);
+    return headers;
+  }
+
+  async function fetchProtected(input, init = {}, retryOn401 = true) {
+    let res = await nativeFetch(input, { ...init, headers: buildHeaders(init.headers) });
+    if (res.status === 401 && retryOn401) {
+      const entered = window.prompt('Enter CRM internal access key');
+      if (entered && entered.trim()) {
+        setKey(entered);
+        res = await nativeFetch(input, { ...init, headers: buildHeaders(init.headers) });
+      }
+    }
+    return res;
+  }
+
+  window.fetch = function patchedFetch(input, init) {
+    if (!isProtected(input)) return nativeFetch(input, init);
+    return fetchProtected(input, init, true);
+  };
+
+  return { isProtected, getKey, setKey, clearKey, buildHeaders, fetch: fetchProtected };
+})();
+
 // ─── API HANDLER ──────────────────────────────────────────
 LP.api = (() => {
   async function getLeads() {

@@ -18,6 +18,7 @@ module.exports = async function handler(req, res) {
     res.setHeader('Allow', ['GET']);
     return res.status(405).end('Method ' + req.method + ' Not Allowed');
   }
+  if (!wa.checkReadAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
   await wa.ensureWhatsappSchema();
 
   try {

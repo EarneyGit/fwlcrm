@@ -128,13 +128,17 @@ function getWaConfig() {
   };
 }
 
-// --- Write-endpoint auth (extension-ready; enforced Batch 7) -
-// NOTE: this repo currently has NO auth middleware anywhere.
-// Set CRM_API_KEY in Vercel and pass X-CRM-Key from the UI to enforce.
+// --- Internal route auth -------------------------------------
+// Sensitive CRM routes use X-CRM-Key for both reads and writes.
+// In production, missing CRM_API_KEY must fail closed.
 function checkWriteAuth(req) {
   const key = env.getEnv('CRM_API_KEY');
   if (!key) return !env.isProd();
   return req.headers['x-crm-key'] === key;
+}
+
+function checkReadAuth(req) {
+  return checkWriteAuth(req);
 }
 
 // --- Phone normalization (India-first, matches convert.js) ---
@@ -299,6 +303,7 @@ async function applyAssignment(conversationId, phoneNumberId) {
 module.exports = {
   ensureWhatsappSchema,
   getWaConfig,
+  checkReadAuth,
   checkWriteAuth,
   normalizePhone,
   last10,
