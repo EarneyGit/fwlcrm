@@ -321,7 +321,6 @@ LP.pages.integrations = (() => {
       const res = await fetch('/api/whatsapp-settings');
       const d = await res.json();
       const ready = d.tokenConfigured && d.appSecretConfigured;
-      const writeAuthReady = d.writeAuthEnforced || !d.writeAuthConfigured ? d.writeAuthEnforced : true;
       if (badge) {
         badge.textContent = ready ? 'ready' : 'setup needed';
         badge.className = 'badge ' + (ready ? 'badge-success' : 'badge-neutral');
