@@ -32,6 +32,7 @@ module.exports = async function handler(req, res) {
   await wa.ensureWhatsappSchema();
 
   if (req.method === 'GET') {
+    if (!wa.checkReadAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
     try {
       const { conversationId } = req.query;
       if (!conversationId) return res.status(400).json({ error: 'Missing conversationId' });

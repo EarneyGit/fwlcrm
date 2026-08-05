@@ -11,6 +11,7 @@ module.exports = async function handler(req, res) {
   await wa.ensureWhatsappSchema();
 
   if (req.method === 'GET') {
+    if (!wa.checkReadAuth(req)) return res.status(401).json({ error: 'Unauthorized' });
     try {
       const { leadId, due } = req.query;
       const where = ["f.status = 'pending'"]; const vals = []; let i = 1;
