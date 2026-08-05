@@ -22,8 +22,13 @@ LP.pages.leads = (() => {
     return `${Math.floor(diff/86400)}d ago`;
   }
 
-  function sourceBadge(source) {
+  function sourceBadge(source, sourcePlatform) {
+    if (sourcePlatform === 'google') return `<span class="badge" style="padding:2px 6px;background:rgba(66,133,244,0.12);color:#4285F4;border:1px solid rgba(66,133,244,0.22)">G Ads</span>`;
     if (source === 'instagram') return `<span class="badge badge-ig" style="padding:2px 6px"><img src="/icons/instagram.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> IG</span>`;
+    if (source === 'whatsapp') return `<span class="badge" style="padding:2px 6px;background:rgba(37,211,102,0.12);color:#25D366;border:1px solid rgba(37,211,102,0.22)">WA</span>`;
+    if (source === 'referral') return `<span class="badge" style="padding:2px 6px;background:rgba(245,158,11,0.12);color:#F59E0B;border:1px solid rgba(245,158,11,0.22)">Referral</span>`;
+    if (source === 'phone') return `<span class="badge" style="padding:2px 6px;background:rgba(108,71,255,0.12);color:#6C47FF;border:1px solid rgba(108,71,255,0.22)">Phone</span>`;
+    if (source === 'manual') return `<span class="badge" style="padding:2px 6px;background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.22)">Manual</span>`;
     return `<span class="badge badge-fb" style="padding:2px 6px"><img src="/icons/facebook.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> FB</span>`;
   }
 
@@ -45,7 +50,11 @@ LP.pages.leads = (() => {
         l.phone.includes(q) ||
         l.email.toLowerCase().includes(q) ||
         l.campaign.toLowerCase().includes(q) ||
-        l.clientName.toLowerCase().includes(q);
+        l.clientName.toLowerCase().includes(q) ||
+        (l.sourcePlatform || '').toLowerCase().includes(q) ||
+        (l.googleCampaignName || '').toLowerCase().includes(q) ||
+        (l.googleAdName || '').toLowerCase().includes(q) ||
+        (l.gclid || '').toLowerCase().includes(q);
       return matchStatus && matchClient && matchSearch;
     });
   }
@@ -77,10 +86,10 @@ LP.pages.leads = (() => {
             </div>
           </div>
         </td>
-        <td>${sourceBadge(lead.source)}</td>
+        <td>${sourceBadge(lead.source, lead.sourcePlatform)}</td>
         <td>
           <div style="font-size:12px;max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-2)">${lead.campaign}</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${lead.clientName}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${lead.clientName}${lead.sourcePlatform === 'google' && lead.googleCampaignName ? ' · ' + lead.googleCampaignName : ''}</div>
         </td>
         <td>
           ${statusBadge(lead.status)}
@@ -263,9 +272,9 @@ LP.pages.leads = (() => {
     document.getElementById('export-btn')?.addEventListener('click', () => {
       const leads = filteredLeads();
       const csv = [
-        ['Name','Phone','Email','Status','Source','Campaign','Client','City','Received'].join(','),
+        ['Name','Phone','Email','Status','Source','Source Platform','Campaign','Google Campaign','Client','City','Received'].join(','),
         ...leads.map(l => [
-          `"${l.name}"`,l.phone,l.email,l.status,l.source,`"${l.campaign}"`,`"${l.clientName}"`,l.city,l.createdAt
+          `"${l.name}"`,l.phone,l.email,l.status,l.source,l.sourcePlatform || '',`"${l.campaign}"`,`"${l.googleCampaignName || ''}"`,`"${l.clientName}"`,l.city,l.createdAt
         ].join(',')),
       ].join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
@@ -314,10 +323,62 @@ LP.pages.leads = (() => {
           </select>
         </div>
         <div class="form-group">
+          <label class="form-label">Source Platform</label>
+          <select class="form-select" id="ml-source-platform">
+            <option value="manual">Manual / Other</option>
+            <option value="meta">Meta Ads</option>
+            <option value="google">Google Ads</option>
+            <option value="whatsapp">WhatsApp</option>
+          </select>
+        </div>
+        <div class="form-group" id="ml-meta-wrap">
           <label class="form-label">Ad / Campaign (from live ads, optional)</label>
           <select class="form-select" id="ml-ad">
             <option value="">Not from an ad / unknown</option>
           </select>
+        </div>
+        <div id="ml-google-wrap" style="display:none;border:1px solid var(--border);border-radius:12px;padding:12px;background:var(--surface-2);margin-bottom:12px">
+          <div style="font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:8px">Google Attribution</div>
+          <div class="form-group">
+            <label class="form-label">GCLID</label>
+            <input class="form-input" id="ml-gclid" placeholder="Google click ID">
+          </div>
+          <div class="form-group">
+            <label class="form-label">GBRAID</label>
+            <input class="form-input" id="ml-gbraid" placeholder="Optional for app/web flows">
+          </div>
+          <div class="form-group">
+            <label class="form-label">WBRAID</label>
+            <input class="form-input" id="ml-wbraid" placeholder="Optional for iOS/web flows">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Google Campaign ID</label>
+            <input class="form-input" id="ml-google-campaign-id" placeholder="e.g. 123456789">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Google Campaign Name</label>
+            <input class="form-input" id="ml-google-campaign-name" placeholder="Brand Search Chennai">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Google Ad Group ID</label>
+            <input class="form-input" id="ml-google-ad-group-id" placeholder="Optional">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Google Ad Group Name</label>
+            <input class="form-input" id="ml-google-ad-group-name" placeholder="Optional">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Google Ad ID</label>
+            <input class="form-input" id="ml-google-ad-id" placeholder="Optional">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Google Ad Name</label>
+            <input class="form-input" id="ml-google-ad-name" placeholder="Optional">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Google Click Time</label>
+            <input class="form-input" id="ml-google-click-at" type="datetime-local">
+          </div>
         </div>
         <div class="form-group">
           <label class="form-label">Lead Source</label>
@@ -354,6 +415,14 @@ LP.pages.leads = (() => {
     loadAds();
     overlay.querySelector('#ml-client').addEventListener('change', loadAds);
 
+    function syncAttributionUI() {
+      const platform = overlay.querySelector('#ml-source-platform').value;
+      overlay.querySelector('#ml-meta-wrap').style.display = platform === 'meta' ? 'block' : 'none';
+      overlay.querySelector('#ml-google-wrap').style.display = platform === 'google' ? 'block' : 'none';
+    }
+    syncAttributionUI();
+    overlay.querySelector('#ml-source-platform').addEventListener('change', syncAttributionUI);
+
     overlay.querySelector('#ml-cancel').addEventListener('click', () => overlay.remove());
     overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelector('#ml-save').addEventListener('click', async () => {
@@ -362,9 +431,22 @@ LP.pages.leads = (() => {
       const email  = overlay.querySelector('#ml-email').value.trim();
       const cid    = overlay.querySelector('#ml-client').value;
       const source = overlay.querySelector('#ml-source').value;
+      const sourcePlatform = overlay.querySelector('#ml-source-platform').value;
       const adSel  = overlay.querySelector('#ml-ad');
-      const adId   = adSel.value || null;
+      const adId   = sourcePlatform === 'meta' ? (adSel.value || null) : null;
       const campaign = adId ? (adSel.selectedOptions[0].dataset.campaign || null) : null;
+      const googlePayload = sourcePlatform === 'google' ? {
+        gclid: overlay.querySelector('#ml-gclid').value.trim(),
+        gbraid: overlay.querySelector('#ml-gbraid').value.trim(),
+        wbraid: overlay.querySelector('#ml-wbraid').value.trim(),
+        googleCampaignId: overlay.querySelector('#ml-google-campaign-id').value.trim(),
+        googleCampaignName: overlay.querySelector('#ml-google-campaign-name').value.trim(),
+        googleAdGroupId: overlay.querySelector('#ml-google-ad-group-id').value.trim(),
+        googleAdGroupName: overlay.querySelector('#ml-google-ad-group-name').value.trim(),
+        googleAdId: overlay.querySelector('#ml-google-ad-id').value.trim(),
+        googleAdName: overlay.querySelector('#ml-google-ad-name').value.trim(),
+        googleClickAt: overlay.querySelector('#ml-google-click-at').value || null,
+      } : {};
       if (!name || !phone) { LP.toast.warning('Missing fields', 'Name and phone are required'); return; }
       
       const btn = overlay.querySelector('#ml-save');
@@ -372,7 +454,7 @@ LP.pages.leads = (() => {
       btn.disabled = true;
 
       try {
-        await LP.api.addManualLead({ name, phone, email, clientId: cid, source, adId, campaign });
+        await LP.api.addManualLead({ name, phone, email, clientId: cid, source, sourcePlatform, adId, campaign, ...googlePayload });
         // Refresh leads from API
         LP.data.leads = await LP.api.getLeads();
         renderTable();

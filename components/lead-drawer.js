@@ -25,8 +25,13 @@ LP.drawer = (() => {
     });
   }
 
-  function sourceBadge(source) {
+  function sourceBadge(source, sourcePlatform) {
+    if (sourcePlatform === 'google') return `<span class="badge" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px;background:rgba(66,133,244,0.12);color:#4285F4;border:1px solid rgba(66,133,244,0.22)">G Ads</span>`;
     if (source === 'instagram') return `<span class="badge badge-ig" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px"><img src="/icons/instagram.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> IG</span>`;
+    if (source === 'whatsapp') return `<span class="badge" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);color:#25D366;border:1px solid rgba(37,211,102,0.22)">WA</span>`;
+    if (source === 'referral') return `<span class="badge" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px;background:rgba(245,158,11,0.12);color:#F59E0B;border:1px solid rgba(245,158,11,0.22)">Referral</span>`;
+    if (source === 'phone') return `<span class="badge" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px;background:rgba(108,71,255,0.12);color:#6C47FF;border:1px solid rgba(108,71,255,0.22)">Phone</span>`;
+    if (source === 'manual') return `<span class="badge" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px;background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.22)">Manual</span>`;
     return `<span class="badge badge-fb" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px"><img src="/icons/facebook.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> FB</span>`;
   }
 
@@ -86,7 +91,7 @@ LP.drawer = (() => {
         <div style="flex:1;min-width:0">
           <div class="drawer-lead-name">${lead.name}</div>
           <div class="drawer-lead-meta" style="display:flex;align-items:center;gap:8px;margin-top:4px">
-            ${sourceBadge(lead.source)}
+            ${sourceBadge(lead.source, lead.sourcePlatform)}
             ${statusBadge(lead.status)}
             <span style="color:var(--text-3);font-size:11px">${LP.utils.formatRelativeTime(lead.createdAt)}</span>
           </div>
@@ -145,9 +150,42 @@ LP.drawer = (() => {
             <div class="detail-value" style="font-size:12px">${lead.campaign || '—'}</div>
           </div>
           <div class="detail-row">
+            <div class="detail-label">Source Platform</div>
+            <div class="detail-value">${lead.sourcePlatform || '—'}</div>
+          </div>
+          <div class="detail-row">
             <div class="detail-label">Ad ID</div>
             <div class="detail-value mono text-faint">${lead.adId || '—'}</div>
           </div>
+          ${lead.sourcePlatform === 'google' ? `
+          <div class="detail-row">
+            <div class="detail-label">Google Campaign</div>
+            <div class="detail-value" style="font-size:12px">${lead.googleCampaignName || '—'}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Google Campaign ID</div>
+            <div class="detail-value mono text-faint">${lead.googleCampaignId || '—'}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Google Ad Group</div>
+            <div class="detail-value" style="font-size:12px">${lead.googleAdGroupName || '—'}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Google Ad</div>
+            <div class="detail-value" style="font-size:12px">${lead.googleAdName || '—'}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">GCLID</div>
+            <div class="detail-value mono text-faint">${lead.gclid || '—'}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">GBRAID / WBRAID</div>
+            <div class="detail-value mono text-faint">${lead.gbraid || lead.wbraid || '—'}</div>
+          </div>
+          <div class="detail-row">
+            <div class="detail-label">Google Click Time</div>
+            <div class="detail-value" style="font-size:12px">${formatTs(lead.googleClickAt)}</div>
+          </div>` : ''}
           <div class="detail-row">
             <div class="detail-label">Lead ID</div>
             <div class="detail-value mono text-faint" style="font-size:11px">${lead.leadgenId || '—'}</div>

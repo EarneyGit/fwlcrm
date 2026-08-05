@@ -55,7 +55,15 @@ LP.toast = (() => {
   }
 
   function newLead(lead) {
-    const sourceLabel = lead.source === 'instagram' ? '📸 Instagram' : '📘 Facebook';
+    const sourceLabel = lead.sourcePlatform === 'google'
+      ? '🔎 Google Ads'
+      : lead.source === 'instagram'
+        ? '📸 Instagram'
+        : lead.source === 'whatsapp'
+          ? '💬 WhatsApp'
+          : lead.source === 'manual'
+            ? '📝 Manual'
+            : '📘 Facebook';
     show({
       type: 'lead',
       title: `New Lead — ${lead.name}`,

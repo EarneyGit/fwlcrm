@@ -11,8 +11,11 @@ LP.pages.dashboard = (() => {
   let streamUnsubscribe = null;
   let slaTimer = null;
 
-  function sourceBadge(source) {
+  function sourceBadge(source, sourcePlatform) {
+    if (sourcePlatform === 'google') return `<span class="badge" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px;background:rgba(66,133,244,0.12);color:#4285F4;border:1px solid rgba(66,133,244,0.22)">G Ads</span>`;
     if (source === 'instagram') return `<span class="badge badge-ig" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px"><img src="/icons/instagram.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> IG</span>`;
+    if (source === 'whatsapp') return `<span class="badge" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px;background:rgba(37,211,102,0.12);color:#25D366;border:1px solid rgba(37,211,102,0.22)">WA</span>`;
+    if (source === 'manual') return `<span class="badge" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px;background:rgba(148,163,184,0.12);color:#94A3B8;border:1px solid rgba(148,163,184,0.22)">Manual</span>`;
     return `<span class="badge badge-fb" style="padding:2px 6px;display:inline-flex;align-items:center;gap:3px"><img src="/icons/facebook.png" style="width:13px;height:13px;object-fit:contain;vertical-align:middle;border-radius:2px"> FB</span>`;
   }
 
@@ -99,7 +102,7 @@ LP.pages.dashboard = (() => {
               <div class="sla-name">${l.name}</div>
               <div class="sla-sub">${l.campaign} · ${l.clientName} · ${LP.utils.formatRelativeTime(l.createdAt)}</div>
             </div>
-            <span class="badge badge-fb" style="font-size:10px">${l.source === 'instagram' ? 'IG' : 'FB'}</span>
+            ${sourceBadge(l.source, l.sourcePlatform)}
             <button class="btn btn-success btn-sm" onclick="LP.toast.success('WhatsApp sent!','Template dispatched to ${l.phone}')" style="display:flex;align-items:center;gap:4px">
               ${LP.icons.get('message-circle', 'icon-sm')} WhatsApp
             </button>
