@@ -157,8 +157,8 @@ LP.data = {
   agents: [],
   webhook: {
     url: 'https://fwl-crm.vercel.app/api/webhook',
-    token: 'fwl-crm_secure_token_2026',
-    verifyToken: 'fwl-crm_secure_token_2026',
+    token: 'configured-in-env',
+    verifyToken: 'configured-in-env',
     status: 'active',
     lastPing: new Date().toISOString(),
     totalReceived: 0,

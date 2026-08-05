@@ -1,11 +1,12 @@
 // ============================================================
 // FWL CRM — Meta Conversions API (CAPI) event sender
-// Sends server-side events to Meta pixel 1116116109133710
+// Sends server-side events to Meta pixel using env-configured credentials
 // Called internally when lead status changes
 // ============================================================
 
-const PIXEL_ID   = process.env.META_PIXEL_ID   || '1116116109133710';
-const CAPI_TOKEN = process.env.META_CAPI_TOKEN  || '';
+const env = require('./_env');
+const PIXEL_ID   = env.getEnv('META_PIXEL_ID', '1116116109133710');
+const CAPI_TOKEN = env.getEnv('META_CAPI_TOKEN');
 const CAPI_URL   = `https://graph.facebook.com/v19.0/${PIXEL_ID}/events`;
 
 // SHA-256 hash helper (CAPI requires hashed PII)

@@ -2,11 +2,12 @@
 require('dotenv').config();
 const https = require('https');
 const crypto = require('crypto');
+const { requireEnv, maskSecret } = require('./_script_env');
 
-const APP_SECRET = process.env.META_APP_SECRET;
-const PAGE_TOKEN = 'EAAjBqYlKt0cBRzSVee4ICpcAXhd0Q58EqiE85RlW1R2eMUjKbysEfcQTH1BJotoNXFuC7CdT7EvyM1KfdQKIGtmp1olVzFFx40th0J5NkzvxLmt1x5khmh5Flf3Bj9zrJC5doT6FY8hKGt7pOBMEOJIQRDWLq7teN1eKf0x0IYbQ0iLqdKHbiIzMUkXVv5CxI2HgheXyGCqnAhg4U28ZD';
+const APP_SECRET = requireEnv('META_APP_SECRET');
+const PAGE_TOKEN = requireEnv('META_PAGE_ACCESS_TOKEN');
 
-console.log('APP_SECRET loaded:', APP_SECRET ? APP_SECRET.substring(0,8) + '...' : 'MISSING');
+console.log('APP_SECRET loaded:', maskSecret(APP_SECRET));
 
 const payload = JSON.stringify({
   object: 'page',

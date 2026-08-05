@@ -4,6 +4,7 @@
 // PUT /api/whatsapp-settings -> upsert account row
 // ============================================================
 const db = require('./_db');
+const env = require('./_env');
 const wa = require('./_whatsapp');
 
 module.exports = async function handler(req, res) {
@@ -24,6 +25,8 @@ module.exports = async function handler(req, res) {
         appSecretConfigured: !!cfg.appSecret,
         tokenConfigured: !!cfg.token,           // never expose values
         wabaIdConfigured: !!cfg.wabaId,
+        writeAuthConfigured: !!env.getEnv('CRM_API_KEY'),
+        writeAuthEnforced: env.isProd() ? !!env.getEnv('CRM_API_KEY') : false,
         accounts: rows.map(a => ({
           id: a.id, clientId: a.client_id, clientName: a.client_name,
           wabaId: a.waba_id, phoneNumberId: a.phone_number_id,

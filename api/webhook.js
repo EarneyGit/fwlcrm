@@ -1,8 +1,7 @@
 const db = require('./_db');
 const crypto = require('crypto');
+const env = require('./_env');
 
-const APP_SECRET         = process.env.META_APP_SECRET         || '';
-const VERIFY_TOKEN       = process.env.WEBHOOK_VERIFY_TOKEN    || 'fwl-crm_secure_token_2026';
 const PAGE_ACCESS_TOKEN  = process.env.META_PAGE_ACCESS_TOKEN  || '';
 
 // Disable Next.js body parser so we can read raw bytes for HMAC verification
@@ -21,15 +20,15 @@ function getRawBody(req) {
 }
 
 // --- Signature verification ---------------------------------
-function verifySignature(rawBodyBuffer, signatureHeader) {
-  if (!APP_SECRET) return true; // skip in dev if secret not configured
+function verifySignature(rawBodyBuffer, signatureHeader, appSecret) {
+  if (!appSecret) return !env.isProd(); // local-only soft fallback
   if (!signatureHeader) return false;
 
   const [algo, digest] = signatureHeader.split('=');
   if (algo !== 'sha256') return false;
 
   const expected = crypto
-    .createHmac('sha256', APP_SECRET)
+    .createHmac('sha256', appSecret)
     .update(rawBodyBuffer)
     .digest('hex');
 
@@ -115,11 +114,18 @@ async function resolveClientId(pageId) {
 export default async function handler(req, res) {
   // -- Webhook Verification (GET from Meta) --------------------
   if (req.method === 'GET') {
+    let verifyToken;
+    try {
+      verifyToken = env.requireEnvInProd('WEBHOOK_VERIFY_TOKEN', 'local-dev-webhook-token');
+    } catch (e) {
+      return res.status(500).json({ error: 'Webhook misconfigured' });
+    }
+
     const mode      = req.query['hub.mode'];
     const token     = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
 
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
+    if (mode === 'subscribe' && token === verifyToken) {
       console.log('Webhook verified');
       return res.status(200).send(challenge);
     }
@@ -128,11 +134,18 @@ export default async function handler(req, res) {
 
   // -- Webhook Payload (POST from Meta) ------------------------
   if (req.method === 'POST') {
+    let appSecret;
+    try {
+      appSecret = env.requireEnvInProd('META_APP_SECRET', '');
+    } catch (e) {
+      return res.status(500).json({ error: 'Webhook misconfigured' });
+    }
+
     // Read raw body bytes for HMAC verification (bodyParser is disabled)
     const rawBodyBuffer = await getRawBody(req);
     const sigHeader     = req.headers['x-hub-signature-256'];
 
-    if (!verifySignature(rawBodyBuffer, sigHeader)) {
+    if (!verifySignature(rawBodyBuffer, sigHeader, appSecret)) {
       console.warn('Webhook signature mismatch - request rejected');
       return res.status(403).json({ error: 'Invalid signature' });
     }

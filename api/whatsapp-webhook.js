@@ -8,6 +8,7 @@
 // ============================================================
 const db = require('./_db');
 const crypto = require('crypto');
+const env = require('./_env');
 const wa = require('./_whatsapp');
 
 // Raw body needed for HMAC verification (same pattern as api/webhook.js)
@@ -25,7 +26,7 @@ function getRawBody(req) {
 }
 
 function verifySignature(rawBody, signatureHeader, appSecret) {
-  if (!appSecret) return true;                    // dev fallback
+  if (!appSecret) return !env.isProd();                    // local-only soft fallback
   if (!signatureHeader) return false;
   const [algo, digest] = signatureHeader.split('=');
   if (algo !== 'sha256') return false;
@@ -162,6 +163,10 @@ async function processStatus(value, st) {
 
 export default async function handler(req, res) {
   const cfg = wa.getWaConfig();
+
+  if (env.isProd() && (!cfg.verifyToken || !cfg.appSecret)) {
+    return res.status(500).json({ error: 'WhatsApp webhook misconfigured' });
+  }
 
   // -- Verification handshake ---------------------------------
   if (req.method === 'GET') {

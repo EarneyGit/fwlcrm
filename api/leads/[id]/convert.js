@@ -1,5 +1,6 @@
 const db = require('../../_db');
 const crypto = require('crypto');
+const env = require('../../_env');
 
 function sha256(str) {
   return crypto.createHash('sha256').update(str.trim().toLowerCase()).digest('hex');
@@ -67,18 +68,27 @@ export default async function handler(req, res) {
       ]
     };
 
-    const capiUrl = `https://graph.facebook.com/v20.0/${process.env.META_PIXEL_ID}/events?access_token=${process.env.META_CAPI_TOKEN}`;
-    
-    console.log('Sending CAPI event:', JSON.stringify(eventPayload));
-    
-    const capiRes = await fetch(capiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(eventPayload)
-    });
+    let capiData = { skipped: false };
+    const pixelId = env.getEnv('META_PIXEL_ID');
+    const capiToken = env.getEnv('META_CAPI_TOKEN');
 
-    const capiData = await capiRes.json();
-    console.log('CAPI Response:', capiData);
+    if (pixelId && capiToken) {
+      const capiUrl = `https://graph.facebook.com/v20.0/${pixelId}/events?access_token=${capiToken}`;
+
+      console.log('Sending CAPI Purchase event for lead:', lead.id);
+
+      const capiRes = await fetch(capiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventPayload)
+      });
+
+      capiData = await capiRes.json();
+      console.log('CAPI Response status:', capiRes.status);
+    } else {
+      capiData = { skipped: true, reason: 'META_PIXEL_ID or META_CAPI_TOKEN missing' };
+      console.warn('CAPI skipped for conversion because Meta CAPI env is incomplete');
+    }
 
     // Update DB to mark as converted
     await db.query(`

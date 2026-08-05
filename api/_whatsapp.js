@@ -4,6 +4,7 @@
 // config access, and (future) write-endpoint auth.
 // ============================================================
 const db = require('./_db');
+const env = require('./_env');
 
 // --- Schema (additive, idempotent) --------------------------
 const SCHEMA_SQL = `
@@ -118,13 +119,12 @@ async function ensureWhatsappSchema() {
 // --- Config --------------------------------------------------
 function getWaConfig() {
   return {
-    verifyToken: process.env.WA_WEBHOOK_VERIFY_TOKEN
-              || process.env.WEBHOOK_VERIFY_TOKEN
-              || 'fwl-crm_secure_token_2026',
-    appSecret:   process.env.WA_APP_SECRET || process.env.META_APP_SECRET || '',
-    token:       process.env.WA_TOKEN || '',
-    phoneNumberId: process.env.WA_PHONE_NUMBER_ID || '',
-    wabaId:        process.env.WA_WABA_ID || '',
+    verifyToken: env.getEnv('WA_WEBHOOK_VERIFY_TOKEN')
+              || env.getEnvOrDevFallback('WEBHOOK_VERIFY_TOKEN', 'local-dev-wa-verify-token'),
+    appSecret:   env.getEnv('WA_APP_SECRET') || env.getEnv('META_APP_SECRET'),
+    token:       env.getEnv('WA_TOKEN'),
+    phoneNumberId: env.getEnv('WA_PHONE_NUMBER_ID'),
+    wabaId:        env.getEnv('WA_WABA_ID'),
   };
 }
 
@@ -132,8 +132,8 @@ function getWaConfig() {
 // NOTE: this repo currently has NO auth middleware anywhere.
 // Set CRM_API_KEY in Vercel and pass X-CRM-Key from the UI to enforce.
 function checkWriteAuth(req) {
-  const key = process.env.CRM_API_KEY;
-  if (!key) return true;                       // not configured yet
+  const key = env.getEnv('CRM_API_KEY');
+  if (!key) return !env.isProd();
   return req.headers['x-crm-key'] === key;
 }
 

@@ -1,10 +1,11 @@
 const https = require('https');
+const { requireEnv, maskSecret } = require('./_script_env');
 
-const APP_ID     = '2464733710694215';
-const APP_SECRET = '9ce03784c7c38f5335a3c7af2bf0aa93';
-const PAGE_TOKEN = 'EAAjBqYlKt0cBRxLl8xaEAENuxCrZBeWgKl4oJDUR5X0JzPq2T1PFqthlDZBAp5TInJ79jUQPve1s4gxPcaoleGPZBWKmV1v7GiNS1DqW1cVU1SbZBZCdRXDlx5BRkKjOiWfBTb8Ln0EQSI8JVmR3xZAH2VMc4wGFJ7cxN0SZASlZA6CcPrM4ZAZAxpZCcqBfTY5tLmncx3bGssGO2CKLZBTPre8ZD';
+const APP_ID     = requireEnv('META_APP_ID');
+const APP_SECRET = requireEnv('META_APP_SECRET');
+const PAGE_TOKEN = requireEnv('META_PAGE_ACCESS_TOKEN');
 const APP_TOKEN  = APP_ID + '|' + APP_SECRET; // App Access Token
-const PAGE_ID    = '101448221738798';
+const PAGE_ID    = requireEnv('META_PAGE_ID');
 
 function get(url) {
   return new Promise((res, rej) => {
@@ -13,6 +14,10 @@ function get(url) {
 }
 
 async function main() {
+  console.log('Using META_APP_ID:', maskSecret(APP_ID));
+  console.log('Using META_PAGE_ID:', PAGE_ID);
+  console.log('Using META_PAGE_ACCESS_TOKEN:', maskSecret(PAGE_TOKEN));
+
   // 1. Check app-level webhook subscriptions
   console.log('=== APP-LEVEL WEBHOOK SUBSCRIPTIONS ===');
   const subs = await get(`https://graph.facebook.com/v20.0/${APP_ID}/subscriptions?access_token=${APP_TOKEN}`);

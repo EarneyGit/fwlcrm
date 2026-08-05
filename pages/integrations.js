@@ -321,6 +321,7 @@ LP.pages.integrations = (() => {
       const res = await fetch('/api/whatsapp-settings');
       const d = await res.json();
       const ready = d.tokenConfigured && d.appSecretConfigured;
+      const writeAuthReady = d.writeAuthEnforced || !d.writeAuthConfigured ? d.writeAuthEnforced : true;
       if (badge) {
         badge.textContent = ready ? 'ready' : 'setup needed';
         badge.className = 'badge ' + (ready ? 'badge-success' : 'badge-neutral');
@@ -347,7 +348,7 @@ LP.pages.integrations = (() => {
             <button class="btn btn-ghost btn-sm" onclick="copyToClipboard('${d.webhookUrl}')">Copy</button>
           </div></div>
         <div class="detail-row"><div class="detail-label">Verify token</div>
-          <div class="detail-value">${d.verifyTokenConfigured ? 'configured' : 'missing'} &middot; App secret: ${d.appSecretConfigured ? 'configured' : 'missing'} &middot; WA_TOKEN: ${d.tokenConfigured ? 'configured' : 'missing (sending disabled)'}</div></div>
+          <div class="detail-value">${d.verifyTokenConfigured ? 'configured' : 'missing'} &middot; App secret: ${d.appSecretConfigured ? 'configured' : 'missing'} &middot; WA_TOKEN: ${d.tokenConfigured ? 'configured' : 'missing (sending disabled)'} &middot; Write auth: ${d.writeAuthEnforced ? 'enforced' : (d.writeAuthConfigured ? 'configured (non-prod)' : 'missing')}</div></div>
         <div class="drawer-section-title" style="margin-top:10px">Accounts &amp; assignment rules</div>
         ${rows || '<div style="font-size:12px;color:var(--text-3)">No accounts yet - run scripts/migrate-whatsapp.js or save one below after Meta setup.</div>'}
         <div class="drawer-section-title" style="margin-top:10px">Compliance</div>

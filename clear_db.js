@@ -1,5 +1,8 @@
 require('dotenv').config();
+const { assertSafeDestructiveRun } = require('./scripts/_guard_destructive');
 const db = require('./api/_db');
+
+assertSafeDestructiveRun('clear_db.js');
 
 async function run() {
   try {

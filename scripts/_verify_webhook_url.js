@@ -1,7 +1,8 @@
 // Test the webhook GET verification endpoint (what Meta calls to verify the webhook URL)
 const https = require('https');
+const { requireEnv } = require('./_script_env');
 
-const VERIFY_TOKEN = 'fwl-crm_secure_token_2026';
+const VERIFY_TOKEN = requireEnv('WEBHOOK_VERIFY_TOKEN');
 const challenge = 'test_challenge_12345';
 
 // Test on fwl-crm.vercel.app
