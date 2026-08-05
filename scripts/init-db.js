@@ -32,6 +32,7 @@ const lastNames = ['Kumar','Krishnan','Rajan','Perumal','Sundaram','Iyer','Murug
 const cities = ['Chennai','Coimbatore','Madurai','Trichy','Salem','Vellore'];
 const statuses = ['new','new','new','contacted','contacted','qualified','qualified','won','lost','nurture'];
 const sources = ['facebook','facebook','instagram'];
+const sourcePlatforms = ['meta', 'meta', 'meta', 'manual', 'manual', 'google'];
 
 function generateLeads(count) {
   const leads = [];
@@ -52,12 +53,39 @@ function generateLeads(count) {
       city: cities[Math.floor(Math.random()*cities.length)],
       status: statuses[Math.floor(Math.random()*statuses.length)],
       source: sources[Math.floor(Math.random()*sources.length)],
+      source_platform: sourcePlatforms[Math.floor(Math.random()*sourcePlatforms.length)],
       client_id: client.id,
       campaign: campaigns[Math.floor(Math.random()*campaigns.length)],
       ad_id: `ad_${Math.floor(Math.random()*10000)}`,
+      gclid: null,
+      gbraid: null,
+      wbraid: null,
+      google_campaign_id: null,
+      google_campaign_name: null,
+      google_ad_group_id: null,
+      google_ad_group_name: null,
+      google_ad_id: null,
+      google_ad_name: null,
+      google_click_at: null,
+      google_conversion_uploaded_at: null,
+      google_conversion_status: null,
+      google_conversion_error: null,
       created_at: date.toISOString(),
       sla_breached: false
     });
+
+    const lastLead = leads[leads.length - 1];
+    if (lastLead && lastLead.source_platform === 'google') {
+      lastLead.source = 'manual';
+      lastLead.gclid = `test-gclid-${Date.now()}-${i}`;
+      lastLead.google_campaign_id = `google-campaign-${Math.floor(Math.random()*10000)}`;
+      lastLead.google_campaign_name = campaigns[Math.floor(Math.random()*campaigns.length)] + ' (Google)';
+      lastLead.google_ad_group_id = `google-ad-group-${Math.floor(Math.random()*10000)}`;
+      lastLead.google_ad_group_name = 'Search Ad Group';
+      lastLead.google_ad_id = `google-ad-${Math.floor(Math.random()*10000)}`;
+      lastLead.google_ad_name = 'Responsive Search Ad';
+      lastLead.google_click_at = date.toISOString();
+    }
   }
   return leads.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 }
@@ -110,9 +138,23 @@ async function initDB() {
         city VARCHAR(100),
         status VARCHAR(50) DEFAULT 'new',
         source VARCHAR(50),
+        source_platform VARCHAR(50) DEFAULT 'manual',
         client_id VARCHAR(50) REFERENCES clients(id),
         campaign VARCHAR(255),
         ad_id VARCHAR(100),
+        gclid TEXT,
+        gbraid TEXT,
+        wbraid TEXT,
+        google_campaign_id TEXT,
+        google_campaign_name TEXT,
+        google_ad_group_id TEXT,
+        google_ad_group_name TEXT,
+        google_ad_id TEXT,
+        google_ad_name TEXT,
+        google_click_at TIMESTAMP WITH TIME ZONE,
+        google_conversion_uploaded_at TIMESTAMP WITH TIME ZONE,
+        google_conversion_status TEXT,
+        google_conversion_error TEXT,
         assigned_to VARCHAR(100),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         sla_breached BOOLEAN DEFAULT FALSE,
@@ -152,9 +194,24 @@ async function initDB() {
     const leads = generateLeads(50);
     for (const l of leads) {
       await pool.query(`
-        INSERT INTO leads (id, leadgen_id, name, first_name, last_name, phone, email, city, status, source, client_id, campaign, ad_id, created_at, sla_breached)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-      `, [l.id, l.leadgen_id, l.name, l.first_name, l.last_name, l.phone, l.email, l.city, l.status, l.source, l.client_id, l.campaign, l.ad_id, l.created_at, l.sla_breached]);
+        INSERT INTO leads (
+          id, leadgen_id, name, first_name, last_name, phone, email, city, status, source, source_platform, client_id,
+          campaign, ad_id, gclid, gbraid, wbraid, google_campaign_id, google_campaign_name, google_ad_group_id,
+          google_ad_group_name, google_ad_id, google_ad_name, google_click_at, google_conversion_uploaded_at,
+          google_conversion_status, google_conversion_error, created_at, sla_breached
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16, $17, $18, $19, $20,
+          $21, $22, $23, $24, $25,
+          $26, $27, $28, $29
+        )
+      `, [
+        l.id, l.leadgen_id, l.name, l.first_name, l.last_name, l.phone, l.email, l.city, l.status, l.source, l.source_platform, l.client_id,
+        l.campaign, l.ad_id, l.gclid, l.gbraid, l.wbraid, l.google_campaign_id, l.google_campaign_name, l.google_ad_group_id,
+        l.google_ad_group_name, l.google_ad_id, l.google_ad_name, l.google_click_at, l.google_conversion_uploaded_at,
+        l.google_conversion_status, l.google_conversion_error, l.created_at, l.sla_breached
+      ]);
     }
     console.log("✅ 50 Mock Leads inserted.");
 
